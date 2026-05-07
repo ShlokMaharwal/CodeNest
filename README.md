@@ -1,8 +1,8 @@
-# ⚡ CodePulse — Live Coding Interview Platform
+# ⚡ CodeSync — Live Coding Interview Platform
 
 A real-time collaborative coding platform where interviewers and candidates share a code editor live — with multi-language execution, test cases, and shared notes.
 
-> Built with Next.js 14 · TypeScript · Socket.io · MongoDB · Judge0
+> Built with Next.js 15 · TypeScript · Socket.io · MongoDB · Wandbox API
 
 ---
 
@@ -10,11 +10,12 @@ A real-time collaborative coding platform where interviewers and candidates shar
 
 - **Real-time code sync** — Both users see every keystroke instantly via WebSockets
 - **8 languages** — JavaScript, TypeScript, Python, Java, C++, C, Go, Rust
-- **Live code execution** — Powered by Judge0 API (free tier available)
+- **Live code execution** — Powered by Wandbox free, unauthenticated API
 - **Test cases** — Add custom inputs/expected outputs, run all at once
 - **Shared notes** — Synced notepad for both users (problem breakdown, edge cases)
 - **Live user presence** — See who's in the room with colored avatars
-- **Auth system** — Register/login with JWT sessions
+- **Auth system** — Register/login with NextAuth and MongoDB
+- **Dynamic Theming** — Seamless Light/Dark mode toggle 
 
 ---
 
@@ -22,13 +23,13 @@ A real-time collaborative coding platform where interviewers and candidates shar
 
 | Layer | Tech |
 |---|---|
-| Frontend | Next.js 14, React, TypeScript, TailwindCSS |
+| Frontend | Next.js 15, React, TypeScript, TailwindCSS, next-themes |
 | Editor | Monaco Editor (@monaco-editor/react) |
 | Real-time | Socket.io (custom Node server) |
 | Backend | Next.js API Routes + Express-like server.js |
 | Database | MongoDB + Mongoose |
 | Auth | NextAuth.js (credentials) |
-| Execution | Judge0 CE API (via RapidAPI) |
+| Execution | Wandbox API |
 
 ---
 
@@ -36,8 +37,8 @@ A real-time collaborative coding platform where interviewers and candidates shar
 
 ### 1. Clone & install
 ```bash
-git clone https://github.com/yourusername/codepulse
-cd codepulse
+git clone https://github.com/yourusername/codesync
+cd codesync
 npm install
 ```
 
@@ -50,22 +51,19 @@ Fill in `.env.local`:
 
 ```env
 # MongoDB Atlas (free at mongodb.com/atlas)
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/codepulse
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/codesync
 
 # Generate with: openssl rand -base64 32
 NEXTAUTH_SECRET=your-secret-here
 NEXTAUTH_URL=http://localhost:3000
-
-# Judge0 via RapidAPI (free tier: 100 req/day)
-# Get at: rapidapi.com/judge0-official/api/judge0-ce
-JUDGE0_API_KEY=your-rapidapi-key
-JUDGE0_API_URL=https://judge0-ce.p.rapidapi.com
 ```
+
+*Note: Code execution uses the free Wandbox API and does not require any API keys.*
 
 ### 3. Run the app
 ```bash
 # This starts both Next.js AND the WebSocket server
-node server.js
+npm run server
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
@@ -75,7 +73,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ## 📁 Project Structure
 
 ```
-codepulse/
+codesync/
 ├── server.js                  # Custom Node server (WebSocket + Next.js)
 ├── src/
 │   ├── app/
@@ -96,7 +94,7 @@ codepulse/
 │   ├── lib/
 │   │   ├── mongodb.ts         # DB connection
 │   │   ├── auth.ts            # NextAuth config
-│   │   ├── judge0.ts          # Code execution logic
+│   │   ├── wandbox.ts         # Code execution logic via Wandbox
 │   │   ├── socket.ts          # Socket.io client
 │   │   └── models/            # Mongoose schemas
 │   └── types/index.ts         # All TypeScript types
@@ -116,7 +114,7 @@ railway init
 railway up
 ```
 
-Set environment variables in Railway dashboard.
+Set environment variables in the Railway dashboard.
 
 > ⚠️ **Don't use Vercel** for this project — Vercel doesn't support persistent WebSocket connections. Use Railway, Render, or a VPS.
 
@@ -124,9 +122,9 @@ Set environment variables in Railway dashboard.
 
 ## 💡 How to explain this in interviews
 
-**"Walk me through your CodePulse project"**
+**"Walk me through your CodeSync project"**
 
-> "I built a real-time collaborative coding platform — like CoderPad. The hardest part was syncing editor state across multiple clients without conflicts. I used a custom Node.js server alongside Next.js to maintain persistent WebSocket connections via Socket.io. Each room has its own state — code, language, test cases, output — and I broadcast deltas to all clients in the room using Socket.io rooms. For code execution, I integrated the Judge0 API which runs code in sandboxed environments, supporting 8 languages. Auth is handled by NextAuth with JWT sessions, and room data is persisted in MongoDB."
+> "I built a real-time collaborative coding platform — like CoderPad. The hardest part was syncing editor state across multiple clients without conflicts. I used a custom Node.js server alongside Next.js to maintain persistent WebSocket connections via Socket.io. Each room has its own state — code, language, test cases, output — and I broadcast deltas to all clients in the room using Socket.io rooms. For code execution, I integrated the Wandbox API which runs code in sandboxed environments, supporting 8 languages. Auth is handled by NextAuth, and room data is persisted in MongoDB."
 
 **Follow-up: "How did you handle race conditions in the editor?"**
 
@@ -139,7 +137,8 @@ Set environment variables in Railway dashboard.
 ```
 • Built a real-time collaborative code editor platform supporting 8 languages with <50ms sync latency
 • Implemented WebSocket-based state synchronization using Socket.io, serving multiple concurrent rooms
-• Integrated Judge0 CE API for sandboxed code execution with custom test case validation
-• Built JWT auth flow with NextAuth, MongoDB user/room persistence, and role-based session management
-• Deployed on Railway with custom Node.js server handling both HTTP and WebSocket traffic
+• Integrated Wandbox API for sandboxed code execution with custom test case validation
+• Built authentication flow with NextAuth and MongoDB user persistence
+• Designed a dynamic UI using Tailwind CSS and CSS Variables for seamless light/dark mode toggling
+• Deployed on a custom Node.js server handling both HTTP and WebSocket traffic
 ```
