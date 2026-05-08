@@ -47,7 +47,7 @@ export default function RoomPage() {
 
     const socket = getSocket()
 
-    socket.on('connect', () => {
+    const joinRoom = () => {
       setConnected(true)
       socket.emit('join-room', {
         roomId,
@@ -56,9 +56,14 @@ export default function RoomPage() {
           color: (session.user as any).color || '#6366f1',
         },
       })
-    })
+    }
 
+    socket.on('connect', joinRoom)
     socket.on('disconnect', () => setConnected(false))
+
+    if (socket.connected) {
+      joinRoom()
+    }
 
 
     socket.on('room-state', (state: RoomState) => {
@@ -109,7 +114,7 @@ export default function RoomPage() {
     })
 
     return () => {
-      socket.off('connect')
+      socket.off('connect', joinRoom)
       socket.off('disconnect')
       socket.off('room-state')
       socket.off('code-update')
