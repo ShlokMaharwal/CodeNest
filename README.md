@@ -1,5 +1,7 @@
 # CodeNest
 
+**Live Demo:** [https://codenest-0xae.onrender.com](https://codenest-0xae.onrender.com)
+
 A 2-person role-based coding interview platform. Interviewer watches. Candidate codes. Gemini gives hints. Every session is replayable.
 
 ## Tech Stack
@@ -86,11 +88,11 @@ Visit `http://localhost:3000`
 4. Start command: `node server.js`
 5. Add all env vars in Render dashboard
 6. Set `REDIS_URL` to your Upstash URL
-7. Set `NEXTAUTH_URL` to your Render domain
+7. Set `NEXTAUTH_URL` to your Render domain (e.g., `https://codenest-0xae.onrender.com`)
 
 ### Keep-Alive (Prevent Render Sleep)
 
-Set up [UptimeRobot](https://uptimerobot.com) to ping `https://your-app.onrender.com/api/health` every 5 minutes.
+Set up [UptimeRobot](https://uptimerobot.com) to ping `https://codenest-0xae.onrender.com/api/health` every 5 minutes.
 
 ## Project Structure
 
