@@ -1,6 +1,8 @@
 import { ExecutionResult, TestCase } from '@/types'
 
 const WANDBOX_URL = 'https://wandbox.org/api/compile.json'
+const TIMEOUT_MS = 10_000
+const RETRY_DELAY_MS = 1_000
 
 const WANDBOX_COMPILER: Record<string, string> = {
   javascript: 'nodejs-20.17.0',
@@ -13,27 +15,52 @@ const WANDBOX_COMPILER: Record<string, string> = {
   rust:       'rust-1.82.0',
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('TIMEOUT')), ms)
+  )
+  return Promise.race([promise, timeout])
+}
+
 async function runCode(
   code: string,
   language: string,
-  stdin: string = ''
+  stdin: string = '',
+  attempt = 1
 ): Promise<{ stdout: string; stderr: string; code: number }> {
   const compiler = WANDBOX_COMPILER[language] || WANDBOX_COMPILER['javascript']
 
-  const response = await fetch(WANDBOX_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      code,
-      compiler,
-      stdin,
-    }),
-  })
+  let response: Response
+  try {
+    response = await withTimeout(
+      fetch(WANDBOX_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, compiler, stdin }),
+      }),
+      TIMEOUT_MS
+    )
+  } catch (err: any) {
+    if (err.message === 'TIMEOUT') {
+      throw new Error('Execution timed out. Try simplifying your code.')
+    }
+    throw new Error('Could not reach execution server. Check your connection.')
+  }
 
-  if (!response.ok) throw new Error(`Execution API error: ${response.status}`)
+  if (response.status === 429) {
+    throw new Error('Too many requests. Wait a moment and try again.')
+  }
+
+  if (response.status >= 500 && attempt === 1) {
+    await new Promise((r) => setTimeout(r, RETRY_DELAY_MS))
+    return runCode(code, language, stdin, 2)
+  }
+
+  if (!response.ok) {
+    throw new Error(`Execution API error: ${response.status}`)
+  }
 
   const data = await response.json()
-
   const stdout = data.program_output || ''
   const stderr = data.compiler_error || data.program_error || ''
   const exitCode = data.status === '0' ? 0 : 1
@@ -64,7 +91,7 @@ export async function executeCode(
       testCases.map(async (tc) => {
         const result = await runCode(code, language, tc.input)
         const actual = result.stdout.trim()
-        
+
         if (!tc.expectedOutput || tc.expectedOutput.trim() === '') {
           return { ...tc, actualOutput: actual, passed: true, isCustomInput: true, stderr: result.stderr }
         }

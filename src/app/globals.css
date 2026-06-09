@@ -1,64 +1,191 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ── OKLCH Design Tokens ──────────────────────────────────────────── */
 :root {
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --border: #e2e8f0;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --green: #16a34a;
-  --red: #dc2626;
-  --yellow: #ca8a04;
-  --muted: #64748b;
-  --text: #0f172a;
+  /* Surfaces — warm neutral base */
+  --bg:            oklch(0.985 0.003  130);
+  --bg-elevated:   oklch(1     0       0);
+  --surface:       oklch(1     0       0);
+  --surface-2:     oklch(0.975 0.005  130);
+  --surface-3:     oklch(0.955 0.007  130);
+  --overlay:       oklch(0.15  0.02   130 / 0.55);
+
+  /* Borders */
+  --border:        oklch(0.91  0.007  130);
+  --border-strong: oklch(0.84  0.011  130);
+  --border-accent: oklch(0.62  0.15   124 / 0.35);
+
+  /* Text */
+  --text:         oklch(0.17  0.018  130);
+  --text-muted:   oklch(0.48  0.012  130);
+  --text-subtle:  oklch(0.63  0.010  130);
+
+  /* Brand / Accent — lime-green (#CBE892 hue) */
+  --accent:        oklch(0.68  0.16   124);
+  --accent-hover:  oklch(0.62  0.17   124);
+  --accent-soft:   oklch(0.68  0.16   124 / 0.12);
+  --accent-ring:   oklch(0.68  0.16   124 / 0.35);
+
+  /* Semantic */
+  --success:       oklch(0.62  0.17   148);
+  --success-soft:  oklch(0.62  0.17   148 / 0.10);
+  --warning:       oklch(0.80  0.17    85);
+  --warning-soft:  oklch(0.80  0.17    85 / 0.10);
+  --danger:        oklch(0.60  0.22    25);
+  --danger-soft:   oklch(0.60  0.22    25 / 0.10);
+  --info:          oklch(0.60  0.13   200);
+  --info-soft:     oklch(0.60  0.13   200 / 0.10);
+
+  /* Roles */
+  --role-interviewer: oklch(0.68 0.16 124);
+  --role-candidate:   oklch(0.62 0.17 148);
+
+  /* Elevation */
+  --shadow-sm:  0 1px 2px oklch(0.15 0.02 130 / 0.06);
+  --shadow-md:  0 4px 12px oklch(0.15 0.02 130 / 0.09), 0 1px 2px oklch(0.15 0.02 130 / 0.06);
+  --shadow-lg:  0 24px 48px -12px oklch(0.15 0.02 130 / 0.18);
+  --shadow-glow: 0 0 0 4px var(--accent-ring);
+
+  /* Radius */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-full: 9999px;
+
+  /* Editor */
+  --editor-bg:        var(--bg);
+  --editor-gutter:    var(--surface-2);
+  --editor-selection: oklch(0.68 0.16 124 / 0.16);
+  --editor-cursor:    var(--accent);
 }
 
 .dark {
-  --bg: #0a0a0f;
-  --surface: #12121a;
-  --border: #1e1e2e;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
-  --green: #22c55e;
-  --red: #ef4444;
-  --yellow: #eab308;
-  --muted: #6b7280;
-  --text: #e2e8f0;
+  --bg:            oklch(0.13  0.010  130);
+  --bg-elevated:   oklch(0.16  0.012  130);
+  --surface:       oklch(0.17  0.012  130);
+  --surface-2:     oklch(0.20  0.013  130);
+  --surface-3:     oklch(0.23  0.014  130);
+  --overlay:       oklch(0.05  0.008  130 / 0.72);
+
+  --border:        oklch(1 0 0 / 0.08);
+  --border-strong: oklch(1 0 0 / 0.14);
+  --border-accent: oklch(0.89 0.11 124 / 0.35);
+
+  --text:         oklch(0.96 0.005  130);
+  --text-muted:   oklch(0.72 0.010  130);
+  --text-subtle:  oklch(0.55 0.010  130);
+
+  /* Brand / Accent — #CBE892 exactly in dark mode */
+  --accent:        oklch(0.89  0.11   124);
+  --accent-hover:  oklch(0.93  0.10   124);
+  --accent-soft:   oklch(0.89  0.11   124 / 0.15);
+  --accent-ring:   oklch(0.89  0.11   124 / 0.35);
+
+  --success:       oklch(0.72  0.17   148);
+  --success-soft:  oklch(0.72  0.17   148 / 0.15);
+  --warning:       oklch(0.85  0.17    85);
+  --warning-soft:  oklch(0.85  0.17    85 / 0.15);
+  --danger:        oklch(0.70  0.22    25);
+  --danger-soft:   oklch(0.70  0.22    25 / 0.15);
+  --info:          oklch(0.72  0.13   200);
+  --info-soft:     oklch(0.72  0.13   200 / 0.15);
+
+  --shadow-sm:  0 1px 2px oklch(0 0 0 / 0.40);
+  --shadow-md:  0 6px 18px oklch(0 0 0 / 0.45);
+  --shadow-lg:  0 32px 64px -16px oklch(0 0 0 / 0.60);
+
+  --editor-bg:        var(--bg);
+  --editor-gutter:    var(--surface-2);
+  --editor-selection: oklch(0.89 0.11 124 / 0.18);
 }
 
-* {
+/* ── Base ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
+}
+
+html {
+  font-feature-settings: "cv11", "ss01", "ss03";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background-color: var(--bg);
   color: var(--text);
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.5;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+::selection {
+  background-color: var(--accent-soft);
+  color: var(--text);
 }
-::-webkit-scrollbar-track {
-  background: var(--surface);
+
+/* ── Focus Ring ─────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-ring);
 }
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
+
+/* ── Scrollbar ──────────────────────────────────────────────────────── */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
-::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+}
+*::-webkit-scrollbar-thumb:hover {
   background: var(--accent);
 }
 
-/* Monaco editor override */
-.monaco-editor .margin {
-  background: var(--surface) !important;
+/* ── Monaco Editor Overrides ────────────────────────────────────────── */
+.monaco-editor .margin,
+.monaco-editor-background,
+.monaco-editor,
+.monaco-editor .inputarea.ime-input {
+  background: var(--editor-bg) !important;
 }
-.monaco-editor, .monaco-editor-background {
-  background: var(--surface) !important;
+.monaco-editor .margin {
+  background: var(--editor-gutter) !important;
+}
+.monaco-editor .selected-text {
+  background: var(--editor-selection) !important;
+}
+
+/* ── Skeleton shimmer ───────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface) 25%,
+    var(--surface-2) 50%,
+    var(--surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+/* ── Reduced Motion ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -17,7 +17,7 @@ export function UsersPanel({ users, currentUser }: UsersPanelProps) {
       <div className="flex -space-x-2">
         {users.slice(0, 4).map((user) => (
           <div
-            key={user.id}
+            key={user.socketId}
             title={user.name}
             className="w-7 h-7 rounded-full border-2 border-bg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
             style={{ backgroundColor: user.color }}

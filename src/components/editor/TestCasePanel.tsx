@@ -1,106 +1,103 @@
 'use client'
+import { useState } from 'react'
 import { TestCase } from '@/types'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react'
 
 interface TestCasePanelProps {
   testCases: TestCase[]
-  onChange: (testCases: TestCase[]) => void
+  onChange: (cases: TestCase[]) => void
+  readOnly?: boolean
 }
 
-export function TestCasePanel({ testCases, onChange }: TestCasePanelProps) {
-  const addTestCase = () => {
-    onChange([...testCases, { input: '', expectedOutput: '' }])
-  }
+function getStatusPill(tc: TestCase) {
+  if (tc.passed === undefined) return <span className="text-[10px] text-subtle bg-surface-2 border border-border rounded-full px-2 py-0.5">Pending</span>
+  if (tc.passed) return (
+    <span className="text-[10px] text-success bg-success-soft border border-success/25 rounded-full px-2 py-0.5 flex items-center gap-1">
+      <CheckCircle2 size={9} />Pass
+    </span>
+  )
+  return (
+    <span className="text-[10px] text-danger bg-danger-soft border border-danger/25 rounded-full px-2 py-0.5 flex items-center gap-1">
+      <XCircle size={9} />Fail
+    </span>
+  )
+}
 
-  const removeTestCase = (index: number) => {
-    onChange(testCases.filter((_, i) => i !== index))
-  }
-
-  const updateTestCase = (index: number, field: keyof TestCase, value: string) => {
-    const updated = testCases.map((tc, i) =>
-      i === index ? { ...tc, [field]: value } : tc
-    )
-    onChange(updated)
+export function TestCasePanel({ testCases, onChange, readOnly = false }: TestCasePanelProps) {
+  const add = () => onChange([...testCases, { input: '', expectedOutput: '' }])
+  const remove = (i: number) => onChange(testCases.filter((_, idx) => idx !== i))
+  const update = (i: number, key: keyof TestCase, val: string) => {
+    const next = [...testCases]
+    next[i] = { ...next[i], [key]: val }
+    onChange(next)
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border flex-shrink-0">
-        <span className="text-xs text-muted">{testCases.length} test case{testCases.length !== 1 ? 's' : ''}</span>
-        <button
-          onClick={addTestCase}
-          className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors"
-        >
-          <Plus size={12} /> Add
-        </button>
+    <div className="h-full overflow-y-auto p-3">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-xs font-medium text-muted">{testCases.length} test case{testCases.length !== 1 ? 's' : ''}</span>
+        {!readOnly && (
+          <button onClick={add} className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors font-medium">
+            <Plus size={12} />Add
+          </button>
+        )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-        {testCases.map((tc, index) => (
-          <div key={index} className="bg-bg border border-border rounded-xl p-3">
-            <div className="flex items-center justify-between mb-2.5">
-              <span className="text-xs font-mono text-muted">Case {index + 1}</span>
-              {testCases.length > 1 && (
+      <div className="space-y-3">
+        {testCases.map((tc, i) => (
+          <div key={i} className="bg-surface border border-border rounded-md p-3 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-subtle font-semibold">#{i + 1}</span>
+                {getStatusPill(tc)}
+              </div>
+              {!readOnly && (
                 <button
-                  onClick={() => removeTestCase(index)}
-                  className="text-muted hover:text-red transition-colors"
+                  onClick={() => remove(i)}
+                  disabled={testCases.length <= 1}
+                  className="text-muted hover:text-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  aria-label="Delete test case"
                 >
                   <Trash2 size={12} />
                 </button>
               )}
             </div>
 
-            <div className="flex flex-col gap-2">
-              <div>
-                <label className="text-xs text-muted block mb-1">stdin / Input</label>
-                <textarea
-                  value={tc.input}
-                  onChange={(e) => updateTestCase(index, 'input', e.target.value)}
-                  placeholder="e.g. 5\n3 1 4 1 5"
-                  rows={2}
-                  className="w-full bg-surface border border-border text-text placeholder-muted rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-accent resize-none transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-muted block mb-1">Expected Output</label>
-                <textarea
-                  value={tc.expectedOutput}
-                  onChange={(e) => updateTestCase(index, 'expectedOutput', e.target.value)}
-                  placeholder="e.g. 14"
-                  rows={2}
-                  className="w-full bg-surface border border-border text-text placeholder-muted rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-accent resize-none transition-colors"
-                />
-              </div>
-
-
-              {tc.actualOutput !== undefined && (
-                <div className={`rounded-lg px-3 py-2 text-xs font-mono border ${
-                  tc.isCustomInput
-                    ? 'bg-accent/5 border-accent/20 text-accent'
-                    : tc.passed
-                    ? 'bg-green/5 border-green/20 text-green'
-                    : 'bg-red/5 border-red/20 text-red'
-                }`}>
-                  {tc.isCustomInput 
-                    ? `Output: ${tc.actualOutput || '(empty)'}` 
-                    : tc.passed 
-                      ? '✅ Passed' 
-                      : `❌ Got: ${tc.actualOutput}`}
-                </div>
-              )}
+            <div>
+              <label className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1 block">Input (stdin)</label>
+              <textarea
+                rows={2}
+                value={tc.input}
+                onChange={e => update(i, 'input', e.target.value)}
+                readOnly={readOnly}
+                placeholder="Input for this test case…"
+                className="w-full bg-bg border border-border rounded text-xs font-mono p-2 text-text resize-none focus:outline-none focus:border-accent transition-colors placeholder:text-subtle"
+              />
             </div>
+            <div>
+              <label className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1 block">Expected output</label>
+              <textarea
+                rows={2}
+                value={tc.expectedOutput}
+                onChange={e => update(i, 'expectedOutput', e.target.value)}
+                readOnly={readOnly}
+                placeholder="Expected output…"
+                className="w-full bg-bg border border-border rounded text-xs font-mono p-2 text-text resize-none focus:outline-none focus:border-accent transition-colors placeholder:text-subtle"
+              />
+            </div>
+
+            {}
+            {tc.passed !== undefined && tc.actualOutput !== undefined && (
+              <div className={`rounded p-2 text-[10px] font-mono ${tc.passed ? 'bg-success-soft border border-success/20' : 'bg-danger-soft border border-danger/20'}`}>
+                <div className={tc.passed ? 'text-success' : 'text-danger'}>
+                  <strong>Got:</strong> {tc.actualOutput || '(empty)'}
+                </div>
+                {!tc.passed && <div className="text-muted mt-0.5"><strong>Expected:</strong> {tc.expectedOutput}</div>}
+                {tc.stderr && <div className="text-danger mt-0.5 whitespace-pre-wrap">{tc.stderr}</div>}
+              </div>
+            )}
           </div>
         ))}
-
-        {testCases.length === 0 && (
-          <div className="flex-1 flex items-center justify-center text-muted text-xs text-center">
-            <div>
-              <p>No test cases yet.</p>
-              <button onClick={addTestCase} className="text-accent mt-1">Add one</button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

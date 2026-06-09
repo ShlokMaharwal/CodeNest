@@ -1,6 +1,6 @@
 'use client'
 import { ExecutionResult } from '@/types'
-import { Loader2, CheckCircle2, XCircle, Clock, Cpu } from 'lucide-react'
+import { Play, Loader2, CheckCircle2, XCircle, Clock, Cpu, AlertTriangle } from 'lucide-react'
 
 interface OutputPanelProps {
   output: ExecutionResult | null
@@ -10,113 +10,98 @@ interface OutputPanelProps {
 export function OutputPanel({ output, executing }: OutputPanelProps) {
   if (executing) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-muted">
-          <Loader2 size={24} className="animate-spin text-accent" />
-          <span className="text-xs font-mono">Executing code...</span>
-        </div>
+      <div className="h-full flex flex-col items-center justify-center text-muted gap-3">
+        <Loader2 size={22} className="animate-spin text-accent" />
+        <span className="text-sm font-mono">Executing…</span>
       </div>
     )
   }
 
   if (!output) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center text-muted">
-          <div className="text-3xl mb-3">▶</div>
-          <p className="text-xs">Run your code to see output</p>
-          <p className="text-xs mt-1 text-muted/60">Press ⌘↵ or click Run</p>
-        </div>
+      <div className="h-full flex flex-col items-center justify-center text-center px-6 text-muted">
+        <Play size={22} className="text-subtle mb-3 opacity-50" />
+        <p className="text-sm font-medium text-text mb-1">Run your code</p>
+        <p className="text-xs text-muted">Press <kbd className="font-mono bg-surface border border-border rounded px-1.5 py-0.5 text-[10px]">⌘↵</kbd> to execute</p>
       </div>
     )
   }
 
-  const isSuccess = output.status === 'Accepted' || output.status?.includes('Passed')
-  const isError = output.stderr || output.status === 'Error'
+  const allTestsPassed = output.testCases && output.testCases.length > 0 && output.testCases.every(tc => tc.passed)
+  const anyTestFailed  = output.testCases && output.testCases.some(tc => tc.passed === false)
+  const hasError = output.stderr && !anyTestFailed
+
+  const statusBar = () => {
+    if (allTestsPassed) return (
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-success-soft border-b border-success/20 text-success text-xs font-medium">
+        <CheckCircle2 size={14} />
+        <span>All {output.testCases!.length} tests passed</span>
+        <span className="ml-auto flex items-center gap-3 text-success/70">
+          <span className="flex items-center gap-1"><Clock size={10} />{output.time}s</span>
+          <span className="flex items-center gap-1"><Cpu size={10} />{output.memory} KB</span>
+        </span>
+      </div>
+    )
+    if (anyTestFailed) return (
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-danger-soft border-b border-danger/20 text-danger text-xs font-medium">
+        <XCircle size={14} />
+        <span>{output.testCases!.filter(tc => tc.passed === false).length}/{output.testCases!.length} tests failed</span>
+        <span className="ml-auto flex items-center gap-3 text-danger/70">
+          <span className="flex items-center gap-1"><Clock size={10} />{output.time}s</span>
+        </span>
+      </div>
+    )
+    if (hasError) return (
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-warning-soft border-b border-warning/20 text-warning text-xs font-medium">
+        <AlertTriangle size={14} /><span>{output.status}</span>
+      </div>
+    )
+    return (
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-surface-2 border-b border-border text-muted text-xs">
+        <span className="font-mono">{output.status}</span>
+        <span className="ml-auto flex items-center gap-3">
+          <span className="flex items-center gap-1"><Clock size={10} />{output.time}s</span>
+          <span className="flex items-center gap-1"><Cpu size={10} />{output.memory} KB</span>
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-
-      <div className={`flex items-center justify-between px-4 py-2.5 border-b border-border flex-shrink-0 ${
-        isError ? 'bg-red/5' : isSuccess ? 'bg-green/5' : 'bg-yellow/5'
-      }`}>
-        <div className="flex items-center gap-2">
-          {isError ? (
-            <XCircle size={14} className="text-red" />
-          ) : isSuccess ? (
-            <CheckCircle2 size={14} className="text-green" />
-          ) : (
-            <XCircle size={14} className="text-yellow" />
-          )}
-          <span className={`text-xs font-semibold ${
-            isError ? 'text-red' : isSuccess ? 'text-green' : 'text-yellow'
-          }`}>
-            {output.status}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3 text-xs text-muted">
-          {output.time && (
-            <span className="flex items-center gap-1">
-              <Clock size={10} /> {output.time}s
-            </span>
-          )}
-          {output.memory > 0 && (
-            <span className="flex items-center gap-1">
-              <Cpu size={10} /> {(output.memory / 1024).toFixed(1)}MB
-            </span>
-          )}
-        </div>
-      </div>
-
-
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3">
-
+      {statusBar()}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {output.stdout && (
           <div>
-            <p className="text-xs text-muted mb-1.5 font-mono uppercase tracking-wider">stdout</p>
-            <pre className="bg-bg border border-border rounded-lg p-3 text-xs font-mono text-text whitespace-pre-wrap break-words leading-relaxed">
-              {output.stdout}
-            </pre>
+            <div className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1">Stdout</div>
+            <pre className="bg-surface-2 border border-border rounded-md p-3 font-mono text-xs overflow-x-auto whitespace-pre-wrap text-text">{output.stdout}</pre>
           </div>
         )}
-
-
         {output.stderr && (
           <div>
-            <p className="text-xs text-red mb-1.5 font-mono uppercase tracking-wider">stderr</p>
-            <pre className="bg-red/5 border border-red/20 rounded-lg p-3 text-xs font-mono text-red whitespace-pre-wrap break-words leading-relaxed">
-              {output.stderr}
-            </pre>
+            <div className="text-[10px] font-medium text-danger uppercase tracking-wider mb-1">Stderr</div>
+            <pre className="bg-danger-soft border border-danger/20 rounded-md p-3 font-mono text-xs overflow-x-auto whitespace-pre-wrap text-danger">{output.stderr}</pre>
           </div>
         )}
-
-
         {output.testCases && output.testCases.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <p className="text-xs text-muted font-mono uppercase tracking-wider">Test Cases</p>
-            {output.testCases.map((tc, i) => (
-              <div
-                key={i}
-                className={`rounded-lg p-3 border text-xs font-mono ${
-                  tc.passed
-                    ? 'bg-green/5 border-green/20'
-                    : 'bg-red/5 border-red/20'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className={tc.passed ? 'text-green' : 'text-red'}>
-                    {tc.passed ? '✅ Test ' : '❌ Test '}{i + 1}
-                  </span>
-                </div>
-                {!tc.passed && (
-                  <div className="flex flex-col gap-1 text-muted mt-1">
-                    <span>Expected: <span className="text-text">{tc.expectedOutput}</span></span>
-                    <span>Got: <span className="text-red">{tc.actualOutput}</span></span>
+          <div>
+            <div className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-2">Test results</div>
+            <div className="space-y-1.5">
+              {output.testCases.map((tc, i) => (
+                <div key={i} className={`rounded-md p-2.5 text-xs border ${tc.passed ? 'bg-success-soft border-success/20' : 'bg-danger-soft border-danger/20'}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    {tc.passed ? <CheckCircle2 size={11} className="text-success" /> : <XCircle size={11} className="text-danger" />}
+                    <span className={`font-semibold ${tc.passed ? 'text-success' : 'text-danger'}`}>Test {i + 1}</span>
                   </div>
-                )}
-              </div>
-            ))}
+                  {!tc.passed && (
+                    <div className="font-mono text-[10px] space-y-0.5 text-muted mt-1">
+                      <div><span className="text-text">Expected:</span> {tc.expectedOutput}</div>
+                      <div><span className="text-text">Got:</span> {tc.actualOutput || '(empty)'}</div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

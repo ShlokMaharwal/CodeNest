@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 70" fill="none">
+  <!-- C -->
+  <text x="2" y="54" font-family="'Helvetica Neue','Arial',sans-serif" font-weight="300" font-size="58" fill="currentColor" letter-spacing="-1">C</text>
+  <!-- Circular target icon replacing "o" — centered at x=68 -->
+  <g transform="translate(68,35)">
+    <circle cx="0" cy="0" r="22" stroke="currentColor" stroke-width="4.5" fill="none"/>
+    <circle cx="0" cy="0" r="13" stroke="currentColor" stroke-width="3" fill="none"/>
+    <circle cx="0" cy="0" r="5"  stroke="currentColor" stroke-width="2.5" fill="none"/>
+    <circle cx="0" cy="0" r="2"  fill="currentColor"/>
+  </g>
+  <!-- deNest -->
+  <text x="96" y="54" font-family="'Helvetica Neue','Arial',sans-serif" font-weight="300" font-size="58" fill="currentColor" letter-spacing="-1">deNest</text>
+</svg>

@@ -1,16 +1,19 @@
 {
-  "name": "codesync",
+  "name": "codenest",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "server": "node server.js"
+    "server": "node server.js",
+    "seed": "npx tsx scripts/seed-problems.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@monaco-editor/react": "^4.6.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
@@ -19,7 +22,10 @@
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
+    "framer-motion": "^12.40.0",
     "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.383.0",
     "mongoose": "^8.3.4",
     "next": "^15.3.1",
@@ -28,6 +34,8 @@
     "postcss": "^8.4.38",
     "react": "^18",
     "react-dom": "^18",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "socket.io": "^4.7.4",
     "socket.io-client": "^4.7.4",
     "tailwindcss": "^3.4.1",

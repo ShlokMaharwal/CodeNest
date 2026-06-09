@@ -35,18 +35,18 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = (user as any).id;
-        token.color = (user as any).color;
+        token.id = (user as any).id
+        token.color = (user as any).color
       }
-      return token;
+      return token
     },
     async session({ session, token }) {
       if (session.user) {
-        const u = session.user as any;
-        u.id = token.sub;
-        u.color = token.color;
+        const u = session.user as any
+        u.id = token.sub
+        u.color = token.color
       }
-      return session;
+      return session
     },
   },
   pages: {

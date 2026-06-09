@@ -1,17 +1,16 @@
-
 import type { Metadata } from 'next'
 import './globals.css'
 import { Providers } from './providers'
 
 export const metadata: Metadata = {
-  title: 'CodeSync — Live Coding Interview Platform',
-  description: 'Real-time collaborative coding interviews with live code sync, multi-language support, and instant execution.',
+  title: 'CodeNest — Live Coding Interview Platform',
+  description: 'Role-based live coding interviews with real-time collaboration, AI hints, test execution, and session replay.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
