@@ -80,20 +80,6 @@ Visit `http://localhost:3000`
 6. **AI Review** generated on demand (complexity, edge cases, hire decision)
 7. **Replay** available after interview ends — scrub through snapshots
 
-## Deployment (Render)
-
-1. Push to GitHub
-2. Create a new **Web Service** on [Render](https://render.com)
-3. Build command: `npm install && npm run build`
-4. Start command: `node server.js`
-5. Add all env vars in Render dashboard
-6. Set `REDIS_URL` to your Upstash URL
-7. Set `NEXTAUTH_URL` to your Render domain (e.g., `https://codenest-0xae.onrender.com`)
-
-### Keep-Alive (Prevent Render Sleep)
-
-Set up [UptimeRobot](https://uptimerobot.com) to ping `https://codenest-0xae.onrender.com/api/health` every 5 minutes.
-
 ## Project Structure
 
 ```
