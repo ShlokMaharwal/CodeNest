@@ -53,6 +53,15 @@ const FEATURES = [
   { icon: History,  label: 'Full session replay' },
 ]
 
+const FEATURES_DETAILED = [
+  { num: '01', title: 'Invite-only access',   desc: 'Tokenized, expiring room links.' },
+  { num: '02', title: 'Countdown timer',       desc: 'Synchronized server-side clock.' },
+  { num: '03', title: 'Gemini AI hints',       desc: 'Tiered nudges, not solutions.' },
+  { num: '04', title: '8 language runtimes',   desc: 'JS, TS, Python, Go, Java, C++, Rust, SQL.' },
+  { num: '05', title: 'Hire / No-hire review', desc: 'Structured rubric + AI summary.' },
+  { num: '06', title: 'Full session replay',   desc: 'Keystroke-level timeline scrub.' },
+]
+
 
 const HERO_CODE = `#include <vector>
 #include <algorithm>
@@ -141,6 +150,149 @@ function colorize(line: string): React.ReactNode {
   })
 
   return <span dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+const TREE_CODE = `function levelOrder(root) {
+  if (!root) return [];
+
+  const result = [];
+  const queue = [root];
+
+  while (queue.length > 0) {
+    const level = [];
+    const len = queue.length;
+
+    for (let i = 0; i < len; i++) {
+      const node = queue.shift();
+      level.push(node.val);
+      if (node.left)  queue.push(node.left);
+      if (node.right) queue.push(node.right);
+    }
+    result.push(level);
+  }
+  return result;
+}`
+
+function colorizeJS(line: string) {
+  const escaped = line
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+  const JS_RE = /(\/\/[^\n]*|"[^"]*"|'[^']*')|(\b(?:function|const|let|var|return|if|else|for|while|of|in|new|null|true|false)\b)|(\b(?:push|shift|length|val|left|right)\b)|(\b\d+\b)/g
+  const html = escaped.replace(JS_RE, (_match, str, kw, method, num) => {
+    if (str)    return `<span style="color:var(--success)">${_match}</span>`
+    if (kw)     return `<span style="color:var(--accent)">${_match}</span>`
+    if (method) return `<span style="color:var(--info)">${_match}</span>`
+    if (num)    return `<span style="color:var(--warning)">${_match}</span>`
+    return _match
+  })
+  return <span dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+function ThreePanesMockup() {
+  const lines = TREE_CODE.split('\n')
+  return (
+    <div className="relative w-full">
+      <div className="absolute inset-x-24 -bottom-4 h-20 bg-accent/15 blur-3xl rounded-full" />
+      <div
+        className="relative border border-border rounded-xl shadow-lg overflow-hidden bg-bg"
+        style={{ transform: 'perspective(1200px) rotateX(1deg) rotateY(-1deg)' }}
+      >
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-surface-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full bg-danger/60" />
+            <div className="w-2.5 h-2.5 rounded-full bg-warning/60" />
+            <div className="w-2.5 h-2.5 rounded-full bg-success/60" />
+          </div>
+          <div className="text-[11px] text-subtle font-mono flex items-center gap-2">
+            <span>Problem</span>
+            <span className="text-border">·</span>
+            <span>Editor</span>
+            <span className="text-border">·</span>
+            <span>Tests</span>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-subtle font-mono">
+            <span className="text-text font-semibold">IS AK</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-slow" />
+            <span>2 online</span>
+          </div>
+        </div>
+        <div className="grid text-[11px] font-mono" style={{ gridTemplateColumns: '210px 1fr 185px', minHeight: 320 }}>
+          <div className="border-r border-border p-4 bg-surface flex flex-col gap-2.5 overflow-hidden">
+            <span className="text-text font-semibold text-[12px] font-sans leading-snug">
+              Binary Tree Level Order Traversal
+            </span>
+            <span className="text-warning text-[10px] font-semibold font-sans px-1.5 py-0.5 bg-warning/10 rounded w-fit">
+              Medium
+            </span>
+            <p className="text-muted text-[10px] leading-relaxed font-sans">
+              Given the{' '}
+              <code className="bg-surface-2 px-1 rounded text-text">root</code>{' '}
+              of a binary tree, return the{' '}
+              <span className="text-text">level order traversal</span>{' '}
+              of its nodes&#39; values (left to right, level by level).
+            </p>
+            <div className="bg-surface-2 border border-border rounded p-2 text-[10px] font-sans">
+              <div className="text-subtle mb-1 tracking-wider">EXAMPLE 1</div>
+              <div className="text-muted">root = [3,9,20,null,null,15,7]</div>
+              <div className="text-success mt-0.5">Output: [[3],[9,20],[15,7]]</div>
+            </div>
+            <div className="flex gap-1.5 flex-wrap mt-auto">
+              {['Tree', 'BFS', 'Queue'].map(tag => (
+                <span key={tag} className="px-2 py-0.5 bg-surface-2 border border-border rounded text-[10px] text-muted font-sans">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="p-4 bg-bg overflow-hidden">
+            <div className="flex gap-3 leading-[1.75]">
+              <div className="text-subtle select-none text-right shrink-0" style={{ minWidth: 18 }}>
+                {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
+              </div>
+              <div className="overflow-hidden">
+                {lines.map((line, i) => (
+                  <div key={i} className="whitespace-pre">{line ? colorizeJS(line) : '\u00A0'}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="border-l border-border p-4 bg-surface flex flex-col gap-2.5">
+            <div className="text-[10px] font-semibold text-subtle tracking-widest font-sans mb-1">TEST RESULTS</div>
+            {[
+              { label: 'Case 1',       time: '1ms' },
+              { label: 'Case 2',       time: '0ms' },
+              { label: 'Case 3',       time: '1ms' },
+              { label: 'Edge: empty',  time: '0ms' },
+            ].map(({ label, time }) => (
+              <div key={label} className="flex items-center justify-between">
+                <span className="flex items-center gap-1 text-success font-sans">
+                  <Check size={9} />
+                  {label}
+                </span>
+                <span className="text-subtle text-[10px] font-sans">{time}</span>
+              </div>
+            ))}
+            <div className="mt-auto pt-3 border-t border-border">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-success font-semibold text-[12px] font-sans">12/12 passed</span>
+                <span className="text-subtle text-[10px] font-sans">93ms</span>
+              </div>
+              <div className="w-full h-1.5 bg-surface-2 rounded-full overflow-hidden">
+                <div className="h-full bg-success rounded-full" style={{ width: '100%' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-center gap-6 px-4 py-2.5 border-t border-border bg-surface-2">
+          <Code2 size={13} className="text-subtle" />
+          <Brain  size={13} className="text-subtle" />
+          <Play   size={13} className="text-subtle" />
+          <Users  size={13} className="text-subtle" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ─── Main page ───────────────────────────────────────────────────────
@@ -343,11 +495,36 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Copyright */}
-        <div className="w-full max-w-2xl mt-10">
-          <p className="text-xs text-subtle font-mono text-center">
-            Made by <span className="text-accent font-semibold">Shlok</span> · © {new Date().getFullYear()} CodeNest. All rights reserved.
-          </p>
+        <div className="w-full max-w-4xl mt-24">
+          <h2 className="text-2xl sm:text-3xl font-semibold text-text text-left mb-10 tracking-tight">
+            Everything an interview loop actually needs.
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-border rounded-xl overflow-hidden">
+            {FEATURES_DETAILED.map(({ num, title, desc }) => (
+              <div key={title} className="bg-surface p-6 text-left relative">
+                <div className="text-[10px] font-mono text-subtle mb-4">{num}</div>
+                <div className="w-1.5 h-1.5 rounded-full bg-accent absolute top-6 right-6" />
+                <h3 className="font-semibold text-text mb-1.5">{title}</h3>
+                <p className="text-sm text-accent leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="w-full max-w-4xl mt-24">
+          <div className="flex items-start justify-between mb-10">
+            <h2 className="text-2xl sm:text-3xl font-semibold text-text tracking-tight">
+              Three panes. One verdict.
+            </h2>
+            <span className="hidden sm:flex items-center gap-2 text-xs text-subtle font-mono mt-2">
+              Problem
+              <span className="text-border mx-0.5">·</span>
+              Editor
+              <span className="text-border mx-0.5">·</span>
+              Tests
+            </span>
+          </div>
+          <ThreePanesMockup />
         </div>
       </main>
 
