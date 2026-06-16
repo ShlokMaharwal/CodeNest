@@ -277,16 +277,7 @@ export default function HomePage() {
 
       {/* ── Hero ── */}
       <main className="flex-1 flex flex-col items-center px-6 pt-24 pb-16 text-center">
-        {/* Eyebrow */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-2 bg-surface border border-border rounded-full px-3 py-1 mb-8 text-xs text-muted font-mono"
-        >
-          <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse-slow" />
-          Role-based coding interview platform · v2
-        </motion.div>
+
 
         {/* H1 */}
         <motion.h1
