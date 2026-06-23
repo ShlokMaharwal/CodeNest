@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
 import {
@@ -85,42 +85,41 @@ int coinChange(vector<int>& coins, int amount) {
 
 function HeroMockup() {
   return (
-    <div className="relative mt-16 max-w-3xl mx-auto">
-      {}
+    <div className="relative mt-16 w-full max-w-3xl mx-auto px-2 sm:px-0">
       <div className="absolute inset-x-12 -bottom-4 h-24 bg-accent/25 blur-3xl rounded-full" />
-      {}
       <div
         className="relative bg-bg-elevated border border-border rounded-xl shadow-lg overflow-hidden"
         style={{ transform: 'perspective(1200px) rotateX(2deg) rotateY(-3deg)' }}
       >
-        {}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface-2">
-          <div className="w-3 h-3 rounded-full bg-danger/60" />
-          <div className="w-3 h-3 rounded-full bg-warning/60" />
-          <div className="w-3 h-3 rounded-full bg-success/60" />
+        {/* Title bar */}
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 border-b border-border bg-surface-2">
+          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-danger/60" />
+          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-warning/60" />
+          <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-success/60" />
           <div className="flex-1" />
-          <span className="text-xs font-mono text-subtle px-2 py-0.5 bg-surface border border-border rounded">C++</span>
-          <span className="text-xs text-subtle">Coin Change · Medium</span>
+          <span className="text-[10px] sm:text-xs font-mono text-subtle px-1.5 py-0.5 bg-surface border border-border rounded">C++</span>
+          <span className="text-[10px] sm:text-xs text-subtle hidden xs:inline">Coin Change · Medium</span>
         </div>
-        {}
-        <div className="p-5 font-mono text-[13px] leading-relaxed text-text overflow-hidden">
+        {/* Code body — scrollable horizontally on very small screens */}
+        <div className="p-3 sm:p-5 font-mono text-[10px] sm:text-[13px] leading-relaxed text-text overflow-x-auto">
           <pre className="whitespace-pre" style={{ tabSize: 2 }}>
             {HERO_CODE.split('\n').map((line, i) => (
-              <div key={i} className="flex gap-4">
-                <span className="text-subtle select-none w-5 text-right flex-shrink-0">{i + 1}</span>
+              <div key={i} className="flex gap-3 sm:gap-4">
+                <span className="text-subtle select-none w-4 sm:w-5 text-right flex-shrink-0">{i + 1}</span>
                 <span>{colorize(line)}</span>
               </div>
             ))}
           </pre>
         </div>
-        {}
-        <div className="flex items-center justify-between px-4 py-2 border-t border-border bg-surface-2">
-          <div className="flex items-center gap-3 text-xs text-subtle font-mono">
+        {/* Status bar */}
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-t border-border bg-surface-2">
+          <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-subtle font-mono">
             <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-slow" />Live</span>
             <span>2 users</span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-success font-medium">
-            <Check size={12} />
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-success font-medium">
+            <Check size={10} className="sm:hidden" />
+            <Check size={12} className="hidden sm:inline" />
             All tests passed
           </div>
         </div>
@@ -189,8 +188,109 @@ function colorizeJS(line: string) {
   return <span dangerouslySetInnerHTML={{ __html: html }} />
 }
 
+const PANE_LABELS = ['Problem', 'Editor', 'Tests'] as const
+type PaneLabel = typeof PANE_LABELS[number]
+
 function ThreePanesMockup() {
   const lines = TREE_CODE.split('\n')
+  const [activePane, setActivePane] = useState<PaneLabel>('Problem')
+  const touchStartX = useRef<number | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const diff = touchStartX.current - e.changedTouches[0].clientX
+    const currentIndex = PANE_LABELS.indexOf(activePane)
+    if (diff > 40 && currentIndex < PANE_LABELS.length - 1) {
+      setActivePane(PANE_LABELS[currentIndex + 1])
+    } else if (diff < -40 && currentIndex > 0) {
+      setActivePane(PANE_LABELS[currentIndex - 1])
+    }
+    touchStartX.current = null
+  }
+
+  const ProblemPane = (
+    <div className="p-4 bg-surface flex flex-col gap-2.5 overflow-hidden h-full">
+      <span className="text-text font-semibold text-[12px] font-sans leading-snug">
+        Binary Tree Level Order Traversal
+      </span>
+      <span className="text-warning text-[10px] font-semibold font-sans px-1.5 py-0.5 bg-warning/10 rounded w-fit">
+        Medium
+      </span>
+      <p className="text-muted text-[10px] leading-relaxed font-sans">
+        Given the{' '}
+        <code className="bg-surface-2 px-1 rounded text-text">root</code>{' '}
+        of a binary tree, return the{' '}
+        <span className="text-text">level order traversal</span>{' '}
+        of its nodes&#39; values (left to right, level by level).
+      </p>
+      <div className="bg-surface-2 border border-border rounded p-2 text-[10px] font-sans">
+        <div className="text-subtle mb-1 tracking-wider">EXAMPLE 1</div>
+        <div className="text-muted">root = [3,9,20,null,null,15,7]</div>
+        <div className="text-success mt-0.5">Output: [[3],[9,20],[15,7]]</div>
+      </div>
+      <div className="flex gap-1.5 flex-wrap mt-auto">
+        {['Tree', 'BFS', 'Queue'].map(tag => (
+          <span key={tag} className="px-2 py-0.5 bg-surface-2 border border-border rounded text-[10px] text-muted font-sans">
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+
+  const EditorPane = (
+    <div className="p-4 bg-bg overflow-x-auto h-full">
+      <div className="flex gap-3 leading-[1.75] text-[11px] font-mono">
+        <div className="text-subtle select-none text-right shrink-0" style={{ minWidth: 18 }}>
+          {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
+        </div>
+        <div className="overflow-hidden">
+          {lines.map((line, i) => (
+            <div key={i} className="whitespace-pre">{line ? colorizeJS(line) : '\u00A0'}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
+  const TestsPane = (
+    <div className="p-4 bg-surface flex flex-col gap-2.5 h-full text-[11px] font-mono">
+      <div className="text-[10px] font-semibold text-subtle tracking-widest font-sans mb-1">TEST RESULTS</div>
+      {[
+        { label: 'Case 1',       time: '1ms' },
+        { label: 'Case 2',       time: '0ms' },
+        { label: 'Case 3',       time: '1ms' },
+        { label: 'Edge: empty',  time: '0ms' },
+      ].map(({ label, time }) => (
+        <div key={label} className="flex items-center justify-between">
+          <span className="flex items-center gap-1 text-success font-sans">
+            <Check size={9} />
+            {label}
+          </span>
+          <span className="text-subtle text-[10px] font-sans">{time}</span>
+        </div>
+      ))}
+      <div className="mt-auto pt-3 border-t border-border">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-success font-semibold text-[12px] font-sans">12/12 passed</span>
+          <span className="text-subtle text-[10px] font-sans">93ms</span>
+        </div>
+        <div className="w-full h-1.5 bg-surface-2 rounded-full overflow-hidden">
+          <div className="h-full bg-success rounded-full" style={{ width: '100%' }} />
+        </div>
+      </div>
+    </div>
+  )
+
+  const paneContent: Record<PaneLabel, React.ReactNode> = {
+    Problem: ProblemPane,
+    Editor:  EditorPane,
+    Tests:   TestsPane,
+  }
+
   return (
     <div className="relative w-full">
       <div className="absolute inset-x-24 -bottom-4 h-20 bg-accent/15 blur-3xl rounded-full" />
@@ -198,93 +298,79 @@ function ThreePanesMockup() {
         className="relative border border-border rounded-xl shadow-lg overflow-hidden bg-bg"
         style={{ transform: 'perspective(1200px) rotateX(1deg) rotateY(-1deg)' }}
       >
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-surface-2">
+        {/* Title bar */}
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-border bg-surface-2">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-danger/60" />
             <div className="w-2.5 h-2.5 rounded-full bg-warning/60" />
             <div className="w-2.5 h-2.5 rounded-full bg-success/60" />
           </div>
-          <div className="text-[11px] text-subtle font-mono flex items-center gap-2">
-            <span>Problem</span>
-            <span className="text-border">·</span>
-            <span>Editor</span>
-            <span className="text-border">·</span>
+          {/* Desktop label row */}
+          <div className="hidden md:flex text-[11px] text-subtle font-mono items-center gap-2">
+            <span>Problem</span><span className="text-border">·</span>
+            <span>Editor</span><span className="text-border">·</span>
             <span>Tests</span>
           </div>
-          <div className="flex items-center gap-2 text-[11px] text-subtle font-mono">
-            <span className="text-text font-semibold">IS AK</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-slow" />
-            <span>2 online</span>
-          </div>
-        </div>
-        <div className="grid text-[11px] font-mono" style={{ gridTemplateColumns: '210px 1fr 185px', minHeight: 320 }}>
-          <div className="border-r border-border p-4 bg-surface flex flex-col gap-2.5 overflow-hidden">
-            <span className="text-text font-semibold text-[12px] font-sans leading-snug">
-              Binary Tree Level Order Traversal
-            </span>
-            <span className="text-warning text-[10px] font-semibold font-sans px-1.5 py-0.5 bg-warning/10 rounded w-fit">
-              Medium
-            </span>
-            <p className="text-muted text-[10px] leading-relaxed font-sans">
-              Given the{' '}
-              <code className="bg-surface-2 px-1 rounded text-text">root</code>{' '}
-              of a binary tree, return the{' '}
-              <span className="text-text">level order traversal</span>{' '}
-              of its nodes&#39; values (left to right, level by level).
-            </p>
-            <div className="bg-surface-2 border border-border rounded p-2 text-[10px] font-sans">
-              <div className="text-subtle mb-1 tracking-wider">EXAMPLE 1</div>
-              <div className="text-muted">root = [3,9,20,null,null,15,7]</div>
-              <div className="text-success mt-0.5">Output: [[3],[9,20],[15,7]]</div>
-            </div>
-            <div className="flex gap-1.5 flex-wrap mt-auto">
-              {['Tree', 'BFS', 'Queue'].map(tag => (
-                <span key={tag} className="px-2 py-0.5 bg-surface-2 border border-border rounded text-[10px] text-muted font-sans">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div className="p-4 bg-bg overflow-hidden">
-            <div className="flex gap-3 leading-[1.75]">
-              <div className="text-subtle select-none text-right shrink-0" style={{ minWidth: 18 }}>
-                {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
-              </div>
-              <div className="overflow-hidden">
-                {lines.map((line, i) => (
-                  <div key={i} className="whitespace-pre">{line ? colorizeJS(line) : '\u00A0'}</div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="border-l border-border p-4 bg-surface flex flex-col gap-2.5">
-            <div className="text-[10px] font-semibold text-subtle tracking-widest font-sans mb-1">TEST RESULTS</div>
-            {[
-              { label: 'Case 1',       time: '1ms' },
-              { label: 'Case 2',       time: '0ms' },
-              { label: 'Case 3',       time: '1ms' },
-              { label: 'Edge: empty',  time: '0ms' },
-            ].map(({ label, time }) => (
-              <div key={label} className="flex items-center justify-between">
-                <span className="flex items-center gap-1 text-success font-sans">
-                  <Check size={9} />
-                  {label}
-                </span>
-                <span className="text-subtle text-[10px] font-sans">{time}</span>
-              </div>
+          {/* Mobile tab switcher */}
+          <div className="flex md:hidden items-center gap-0.5 bg-surface border border-border rounded-lg p-0.5">
+            {PANE_LABELS.map(label => (
+              <button
+                key={label}
+                onClick={() => setActivePane(label)}
+                className={`text-[10px] font-mono px-2 py-1 rounded-md transition-all ${
+                  activePane === label
+                    ? 'bg-accent text-[#1a2a0e] font-semibold'
+                    : 'text-subtle hover:text-text'
+                }`}
+              >
+                {label}
+              </button>
             ))}
-            <div className="mt-auto pt-3 border-t border-border">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-success font-semibold text-[12px] font-sans">12/12 passed</span>
-                <span className="text-subtle text-[10px] font-sans">93ms</span>
-              </div>
-              <div className="w-full h-1.5 bg-surface-2 rounded-full overflow-hidden">
-                <div className="h-full bg-success rounded-full" style={{ width: '100%' }} />
-              </div>
-            </div>
+          </div>
+          <div className="flex items-center gap-2 text-[11px] text-subtle font-mono">
+            <span className="text-text font-semibold hidden sm:inline">IS AK</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-slow" />
+            <span className="hidden sm:inline">2 online</span>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-6 px-4 py-2.5 border-t border-border bg-surface-2">
+
+        {/* Desktop: three-pane grid */}
+        <div
+          className="hidden md:grid text-[11px] font-mono"
+          style={{ gridTemplateColumns: '210px 1fr 185px', minHeight: 320 }}
+        >
+          <div className="border-r border-border">{ProblemPane}</div>
+          <div>{EditorPane}</div>
+          <div className="border-l border-border">{TestsPane}</div>
+        </div>
+
+        {/* Mobile: single-pane with swipe */}
+        <div
+          className="md:hidden"
+          style={{ minHeight: 280 }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          {paneContent[activePane]}
+        </div>
+
+        {/* Mobile dot indicators */}
+        <div className="md:hidden flex items-center justify-center gap-2 py-2 border-t border-border bg-surface-2">
+          {PANE_LABELS.map(label => (
+            <button
+              key={label}
+              onClick={() => setActivePane(label)}
+              className={`rounded-full transition-all ${
+                activePane === label
+                  ? 'w-4 h-1.5 bg-accent'
+                  : 'w-1.5 h-1.5 bg-border hover:bg-subtle'
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Desktop bottom bar */}
+        <div className="hidden md:flex items-center justify-center gap-6 px-4 py-2.5 border-t border-border bg-surface-2">
           <Code2 size={13} className="text-subtle" />
           <Brain  size={13} className="text-subtle" />
           <Play   size={13} className="text-subtle" />
