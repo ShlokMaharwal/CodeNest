@@ -3,9 +3,15 @@
 **Live Demo:** [https://codenest-0xae.onrender.com](https://codenest-0xae.onrender.com)
 
 A 2-person role-based coding interview platform. Interviewer watches. Candidate codes. Gemini gives hints. Every session is replayable.
+
+## 📸 Demo
+
+### Home Page
 ![CodeNest home page](./docs/images/homepage.png)
 
+### Interview Room
 ![CodeNest interview room screenshot](./docs/images/interview-room.png)
+
 
 ## Tech Stack
 
