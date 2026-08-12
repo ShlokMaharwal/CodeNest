@@ -110,6 +110,7 @@ export interface LiveRoomState {
   notes: string
   hintsUsed: number
   hintsPerCandidate?: Record<string, number>
+  hintsTextPerCandidate?: Record<string, string[]>
   hintsEnabled: boolean
   maxHints: number
   editorLockedBy: string | null

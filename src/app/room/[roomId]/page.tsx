@@ -121,7 +121,7 @@ export default function RoomPage() {
 
     
 
-    socket.on('room-state', (state: LiveRoomState & { myRole: UserRole }) => {
+    socket.on('room-state', (state: LiveRoomState & { myRole: UserRole; myHintTexts?: string[] }) => {
       setRole(state.myRole)
       roleRef.current = state.myRole
       setUsers(state.users)
@@ -131,6 +131,10 @@ export default function RoomPage() {
       setOutput(state.output)
       setNotes(state.notes || '')
       setHintsUsed(state.hintsUsed || 0)
+      // Restore persisted hint texts so the panel is populated after a refresh
+      if (state.myHintTexts && state.myHintTexts.length > 0) {
+        setHints(state.myHintTexts)
+      }
       setHintsEnabled(state.hintsEnabled ?? true)
       setMaxHints(state.maxHints ?? 5)
       setEditorLockedBy(state.editorLockedBy)
@@ -185,6 +189,10 @@ export default function RoomPage() {
       setHintsUsed(h)
     })
 
+    socket.on('hints-text-update', ({ hints: h }: { hints: string[] }) => {
+      setHints(h)
+    })
+
     socket.on('problem-updated', ({ problem: p, code: c }: { problem: Problem; code: string }) => {
       setProblem(p)
       setCode(c)
@@ -221,6 +229,7 @@ export default function RoomPage() {
       socket.off('editor-unlocked')
       socket.off('control-changed')
       socket.off('hint-count-update')
+      socket.off('hints-text-update')
       socket.off('problem-updated')
       socket.off('timer-synced')
       socket.off('interview-ended')
@@ -317,7 +326,8 @@ export default function RoomPage() {
 
   const handleHintUsed = useCallback((hint: string) => {
     setHints((prev) => [...prev, hint])
-    getSocket().emit('hint-used', { roomId })
+    // Send hint text to server so it's persisted in Redis and survives a refresh
+    getSocket().emit('hint-used', { roomId, hintText: hint })
   }, [roomId])
 
   const copyInviteLink = () => {

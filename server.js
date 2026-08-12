@@ -245,10 +245,13 @@ app.prepare().then(async () => {
         socket.data.roomId = roomId
         socket.data.role = role
 
-        const myHintsUsed = role === 'candidate'
+        const myHintsUsed  = role === 'candidate'
           ? ((state.hintsPerCandidate || {})[user.email] || 0)
           : 0
-        socket.emit('room-state', { ...state, myRole: role, hintsUsed: myHintsUsed })
+        const myHintTexts  = role === 'candidate'
+          ? ((state.hintsTextPerCandidate || {})[user.email] || [])
+          : []
+        socket.emit('room-state', { ...state, myRole: role, hintsUsed: myHintsUsed, myHintTexts })
 
         socket.to(roomId).emit('user-joined', {
           user: activeUser,
@@ -359,19 +362,30 @@ app.prepare().then(async () => {
       io.to(roomId).emit('control-changed', { controlledBy: 'candidate' })
     })
 
-    socket.on('hint-used', async ({ roomId }) => {
+    socket.on('hint-used', async ({ roomId, hintText }) => {
       const state = await getRoomState(roomId)
       if (!state) return
 
-      if (!state.hintsPerCandidate) state.hintsPerCandidate = {}
       const email = socket.data.user?.email
+
+      if (!state.hintsPerCandidate) state.hintsPerCandidate = {}
       if (email) {
         state.hintsPerCandidate[email] = (state.hintsPerCandidate[email] || 0) + 1
       }
+
+      // Persist hint text so it can be restored on refresh
+      if (!state.hintsTextPerCandidate) state.hintsTextPerCandidate = {}
+      if (email && hintText) {
+        if (!state.hintsTextPerCandidate[email]) state.hintsTextPerCandidate[email] = []
+        state.hintsTextPerCandidate[email].push(hintText)
+      }
+
       await setRoomState(roomId, state)
 
       const personalCount = email ? (state.hintsPerCandidate[email] || 0) : 0
+      const personalHints  = email ? (state.hintsTextPerCandidate?.[email] || []) : []
       socket.emit('hint-count-update', { hintsUsed: personalCount })
+      socket.emit('hints-text-update', { hints: personalHints })
     })
 
     socket.on('problem-change', async ({ roomId, problemId, problem }) => {
