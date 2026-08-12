@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -63,7 +63,16 @@ export default function LoginPage() {
       {}
       <div className="flex-1 flex items-center justify-center px-6 py-16">
         <div className="w-full max-w-sm">
-          {}
+          {/* Back link */}
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-1.5 text-xs text-muted hover:text-text transition-colors mb-8 group"
+          >
+            <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+            Back
+          </button>
+
+          {/* Logo */}
           <div className="flex items-center justify-center mb-10">
           <Logo height={24} />
           </div>
