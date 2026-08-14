@@ -78,7 +78,7 @@ async function getRoomState(roomId) {
 }
 
 async function setRoomState(roomId, state) {
-  await redis.setex(`room:${roomId}`, 24 * 60 * 60, JSON.stringify(state))
+  await redis.setex(`room:${roomId}`, 7 * 24 * 60 * 60, JSON.stringify(state))
 }
 
 async function saveSnapshot(roomId, state, trigger) {
@@ -441,7 +441,9 @@ app.prepare().then(async () => {
 
         await saveSnapshot(roomId, state, 'end')
 
-        await RoomModel.findOneAndUpdate({ roomId }, { status: 'ended', endedAt: new Date() })
+        // Extend TTL so the room is preserved for 90 days after ending
+        const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+        await RoomModel.findOneAndUpdate({ roomId }, { status: 'ended', endedAt: new Date(), expiresAt })
 
         stopAutoSnapshot(roomId)
 

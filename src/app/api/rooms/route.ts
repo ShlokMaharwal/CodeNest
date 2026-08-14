@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const inviteToken = signInviteToken(roomId)
     const now = new Date()
 
-    let expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000)
+    let expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days default
     if (scheduledAt) {
       const schedDate = new Date(scheduledAt)
       expiresAt = new Date(schedDate.getTime() + 48 * 60 * 60 * 1000)
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       expiresAt,
     })
 
-    let redisTTL = 24 * 60 * 60
+    let redisTTL = 7 * 24 * 60 * 60 // 7 days default
     if (scheduledAt) {
       const schedDate = new Date(scheduledAt)
       const diffMs = schedDate.getTime() - now.getTime()
