@@ -48,8 +48,9 @@ export default function ReplayPage() {
       .then((r) => r.json())
       .then((data) => {
         setRoomInfo(data.room)
-        setSnapshots(data.snapshots || [])
-        setCurrentIdx((data.snapshots?.length || 1) - 1)
+        const snaps = data.snapshots || []
+        setSnapshots(snaps)
+        setCurrentIdx(0)  // always start replay from the beginning
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -58,7 +59,7 @@ export default function ReplayPage() {
   
   useEffect(() => {
     if (!playing) return
-    if (currentIdx >= snapshots.length - 1) {
+    if (snapshots.length === 0 || currentIdx >= snapshots.length - 1) {
       setPlaying(false)
       return
     }
@@ -105,7 +106,7 @@ export default function ReplayPage() {
           {}
           <button
             onClick={() => setCurrentIdx(Math.max(0, currentIdx - 1))}
-            disabled={currentIdx === 0}
+            disabled={snapshots.length === 0 || currentIdx === 0}
             className="p-1.5 rounded-md hover:bg-bg disabled:opacity-40 transition-colors text-muted hover:text-text"
           >
             <SkipBack size={15} />
@@ -124,7 +125,7 @@ export default function ReplayPage() {
 
           <button
             onClick={() => setCurrentIdx(Math.min(snapshots.length - 1, currentIdx + 1))}
-            disabled={currentIdx === snapshots.length - 1}
+            disabled={snapshots.length === 0 || currentIdx === snapshots.length - 1}
             className="p-1.5 rounded-md hover:bg-bg disabled:opacity-40 transition-colors text-muted hover:text-text"
           >
             <SkipForward size={15} />

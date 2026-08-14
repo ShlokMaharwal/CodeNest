@@ -20,6 +20,12 @@ export function NotesPanel({ notes, onChange, readOnly = false }: NotesPanelProp
     timerRef.current = setTimeout(() => setSaving(false), 800)
   }
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       {}

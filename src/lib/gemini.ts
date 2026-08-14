@@ -59,12 +59,12 @@ ${params.code}
 Test results: ${passedCount}/${totalCount} tests passed
 ${params.testResults.map((r, i) => `  Case ${i + 1}: ${r.passed ? '✅' : '❌'} Input: ${r.input} | Expected: ${r.expected} | Got: ${r.actual}`).join('\n')}
 
-Provide a structured review with these exact sections:
-1. **Time Complexity**: Big-O with explanation
-2. **Space Complexity**: Big-O with explanation
-3. **Edge Cases Missed**: List any edge cases the solution doesn't handle
-4. **Code Quality**: Comments on naming, readability, structure
-5. **Overall Assessment**: One of: Strong Hire ✅ / Hire ✅ / Borderline ⚠️ / No Hire ❌ with a one-sentence justification
+Provide a structured review with these EXACT section headers (use bold markdown):
+**Correctness**: Was the solution correct? Did it pass all tests? Note any bugs.
+**Code Quality**: Comments on naming, readability, structure, and best practices.
+**Problem Solving**: Evaluate their approach, algorithm choice, time/space complexity.
+**Communication**: How well did the code communicate intent through naming and structure?
+**Recommendation**: One of: Strong Hire / Hire / Lean Hire / Borderline / No Hire — with a one-sentence justification.
 
 Be direct and concise. No pleasantries.`
 }

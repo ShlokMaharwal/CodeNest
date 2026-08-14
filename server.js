@@ -83,13 +83,26 @@ async function setRoomState(roomId, state) {
 
 async function saveSnapshot(roomId, state, trigger) {
   try {
+    // Extract test results from the last execution output
+    const rawTestCases = state.output?.testCases || []
+    const testResults = rawTestCases.map((tc) => ({
+      input:    tc.input    || '',
+      expected: tc.expectedOutput || '',
+      actual:   tc.actualOutput  || '',
+      passed:   tc.passed        || false,
+    }))
+
+    // Sum hint usage across all candidates (hintsUsed is not a top-level field in Redis state)
+    const hintsPerCandidate = state.hintsPerCandidate || {}
+    const hintsUsed = Object.values(hintsPerCandidate).reduce((sum, n) => sum + (n || 0), 0)
+
     await SnapshotModel.create({
       roomId,
-      code: state.code || '',
-      language: state.language || 'javascript',
-      hintsUsed: state.hintsUsed || 0,
-      testResults: [],
-      timestamp: new Date(),
+      code:        state.code     || '',
+      language:    state.language || 'javascript',
+      hintsUsed,
+      testResults,
+      timestamp:   new Date(),
       trigger,
     })
   } catch (err) {

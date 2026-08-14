@@ -32,7 +32,9 @@ export async function POST(req: NextRequest) {
           { $set: { aiReview: review } },
           { sort: { timestamp: -1 } }
         )
-      } catch (e) {}
+      } catch (e: any) {
+        console.error('[POST /api/ai/review] Failed to persist aiReview to snapshot:', e.message)
+      }
     }
 
     return NextResponse.json({ review })

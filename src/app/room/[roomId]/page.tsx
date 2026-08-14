@@ -176,8 +176,8 @@ export default function RoomPage() {
 
     socket.on('notes-update', ({ notes: n }: { notes: string }) => setNotes(n))
 
-    socket.on('editor-locked', () => {
-      setEditorLockedBy('locked')
+    socket.on('editor-locked', ({ lockedBy }: { lockedBy: string }) => {
+      setEditorLockedBy(lockedBy)
     })
     socket.on('editor-unlocked', () => setEditorLockedBy(null))
 
