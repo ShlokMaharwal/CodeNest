@@ -1,21 +1,34 @@
 'use client'
-import { useState, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSession, signOut } from 'next-auth/react'
-import {
-  Users, Code2, Play, Plus, LogOut, LogIn,
-  Brain, Shield, LayoutDashboard, X, Clock, Lightbulb,
-  ChevronRight, Calendar, History, Check, Copy, ArrowRight
-} from 'lucide-react'
 import { Logo } from '@/components/Logo'
-import Link from 'next/link'
+import { useCommandPalette } from '@/components/palette/CommandPalette'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
+import { Dialog, DialogBody, DialogFooter, DialogHeader } from '@/components/ui/Dialog'
 import { Switch } from '@/components/ui/Switch'
 import { Segmented } from '@/components/ui/Tabs'
 import { motion } from 'framer-motion'
-import { useCommandPalette } from '@/components/palette/CommandPalette'
+import {
+  ArrowRight,
+  Brain,
+  Calendar,
+  Check,
+  Clock,
+  Code2,
+  Copy,
+  History,
+  LayoutDashboard,
+  Lightbulb,
+  LogIn,
+  LogOut,
+  Play,
+  Plus,
+  Shield,
+  Users,
+} from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useRef, useState } from 'react'
 
 interface CreateRoomForm {
   title: string
@@ -38,30 +51,39 @@ const DURATION_OPTIONS = [
 ]
 
 const STEPS = [
-  { icon: Plus,   num: '01', title: 'Create room',    desc: 'Set the problem, timer, and hint config.' },
-  { icon: Users,  num: '02', title: 'Share invite',   desc: 'One-click link to your candidate.' },
-  { icon: Code2,  num: '03', title: 'Code together',  desc: 'Watch live, lock editor, take control.' },
-  { icon: Brain,  num: '04', title: 'AI assessment',  desc: 'Instant complexity analysis + hire verdict.' },
+  { icon: Plus, num: '01', title: 'Create room', desc: 'Set the problem, timer, and hint config.' },
+  { icon: Users, num: '02', title: 'Share invite', desc: 'One-click link to your candidate.' },
+  {
+    icon: Code2,
+    num: '03',
+    title: 'Code together',
+    desc: 'Watch live, lock editor, take control.',
+  },
+  {
+    icon: Brain,
+    num: '04',
+    title: 'AI assessment',
+    desc: 'Instant complexity analysis + hire verdict.',
+  },
 ]
 
-const FEATURES = [
-  { icon: Shield,   label: 'Invite-only access' },
-  { icon: Clock,    label: 'Countdown timer' },
-  { icon: Lightbulb,label: 'Gemini AI hints' },
-  { icon: Play,     label: '8 language support' },
-  { icon: Brain,    label: 'Hire / No-hire review' },
-  { icon: History,  label: 'Full session replay' },
+const _FEATURES = [
+  { icon: Shield, label: 'Invite-only access' },
+  { icon: Clock, label: 'Countdown timer' },
+  { icon: Lightbulb, label: 'Gemini AI hints' },
+  { icon: Play, label: '8 language support' },
+  { icon: Brain, label: 'Hire / No-hire review' },
+  { icon: History, label: 'Full session replay' },
 ]
 
 const FEATURES_DETAILED = [
-  { num: '01', title: 'Invite-only access',   desc: 'Tokenized, expiring room links.' },
-  { num: '02', title: 'Countdown timer',       desc: 'Synchronized server-side clock.' },
-  { num: '03', title: 'Gemini AI hints',       desc: 'Tiered nudges, not solutions.' },
-  { num: '04', title: '8 language runtimes',   desc: 'JS, TS, Python, Go, Java, C++, Rust, SQL.' },
+  { num: '01', title: 'Invite-only access', desc: 'Tokenized, expiring room links.' },
+  { num: '02', title: 'Countdown timer', desc: 'Synchronized server-side clock.' },
+  { num: '03', title: 'Gemini AI hints', desc: 'Tiered nudges, not solutions.' },
+  { num: '04', title: '8 language runtimes', desc: 'JS, TS, Python, Go, Java, C++, Rust, SQL.' },
   { num: '05', title: 'Hire / No-hire review', desc: 'Structured rubric + AI summary.' },
-  { num: '06', title: 'Full session replay',   desc: 'Keystroke-level timeline scrub.' },
+  { num: '06', title: 'Full session replay', desc: 'Keystroke-level timeline scrub.' },
 ]
-
 
 const HERO_CODE = `#include <vector>
 #include <algorithm>
@@ -97,15 +119,21 @@ function HeroMockup() {
           <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-warning/60" />
           <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-success/60" />
           <div className="flex-1" />
-          <span className="text-[10px] sm:text-xs font-mono text-subtle px-1.5 py-0.5 bg-surface border border-border rounded">C++</span>
-          <span className="text-[10px] sm:text-xs text-subtle hidden xs:inline">Coin Change · Medium</span>
+          <span className="text-[10px] sm:text-xs font-mono text-subtle px-1.5 py-0.5 bg-surface border border-border rounded">
+            C++
+          </span>
+          <span className="text-[10px] sm:text-xs text-subtle hidden xs:inline">
+            Coin Change · Medium
+          </span>
         </div>
         {/* Code body — scrollable horizontally on very small screens */}
         <div className="p-3 sm:p-5 font-mono text-[10px] sm:text-[13px] leading-relaxed text-text overflow-x-auto">
           <pre className="whitespace-pre" style={{ tabSize: 2 }}>
             {HERO_CODE.split('\n').map((line, i) => (
               <div key={i} className="flex gap-3 sm:gap-4">
-                <span className="text-subtle select-none w-4 sm:w-5 text-right flex-shrink-0">{i + 1}</span>
+                <span className="text-subtle select-none w-4 sm:w-5 text-right flex-shrink-0">
+                  {i + 1}
+                </span>
                 <span>{colorize(line)}</span>
               </div>
             ))}
@@ -114,7 +142,10 @@ function HeroMockup() {
         {/* Status bar */}
         <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-t border-border bg-surface-2">
           <div className="flex items-center gap-2 sm:gap-3 text-[10px] sm:text-xs text-subtle font-mono">
-            <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-slow" />Live</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse-slow" />
+              Live
+            </span>
             <span>2 users</span>
           </div>
           <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-success font-medium">
@@ -129,22 +160,18 @@ function HeroMockup() {
 }
 
 function colorize(line: string): React.ReactNode {
-  
-  const escaped = line
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  const escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-  
-  const TOKEN_RE = /(\/\/[^\n]*|"[^"]*"|'[^']*')|(#\w+)|(\b(?:int|return|for|if|using|namespace|std|auto|void|bool|while|else|new|delete)\b)|(\b(?:vector|string|INT_MAX|min|max|sort|dp|coins|coin|amount)\b)|(\b\d+\b)|(\b(?:coinChange|i)\b)/g
+  const TOKEN_RE =
+    /(\/\/[^\n]*|"[^"]*"|'[^']*')|(#\w+)|(\b(?:int|return|for|if|using|namespace|std|auto|void|bool|while|else|new|delete)\b)|(\b(?:vector|string|INT_MAX|min|max|sort|dp|coins|coin|amount)\b)|(\b\d+\b)|(\b(?:coinChange|i)\b)/g
 
   const html = escaped.replace(TOKEN_RE, (_match, str, pre, kw, type, num, id) => {
-    if (str)  return `<span style="color:var(--success)">${_match}</span>`
-    if (pre)  return `<span style="color:var(--danger)">${_match}</span>`
-    if (kw)   return `<span style="color:var(--accent)">${_match}</span>`
+    if (str) return `<span style="color:var(--success)">${_match}</span>`
+    if (pre) return `<span style="color:var(--danger)">${_match}</span>`
+    if (kw) return `<span style="color:var(--accent)">${_match}</span>`
     if (type) return `<span style="color:var(--info)">${_match}</span>`
-    if (num)  return `<span style="color:var(--warning)">${_match}</span>`
-    if (id)   return `<span style="color:var(--text-muted)">${_match}</span>`
+    if (num) return `<span style="color:var(--warning)">${_match}</span>`
+    if (id) return `<span style="color:var(--text-muted)">${_match}</span>`
     return _match
   })
 
@@ -173,23 +200,21 @@ const TREE_CODE = `function levelOrder(root) {
 }`
 
 function colorizeJS(line: string) {
-  const escaped = line
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-  const JS_RE = /(\/\/[^\n]*|"[^"]*"|'[^']*')|(\b(?:function|const|let|var|return|if|else|for|while|of|in|new|null|true|false)\b)|(\b(?:push|shift|length|val|left|right)\b)|(\b\d+\b)/g
+  const escaped = line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const JS_RE =
+    /(\/\/[^\n]*|"[^"]*"|'[^']*')|(\b(?:function|const|let|var|return|if|else|for|while|of|in|new|null|true|false)\b)|(\b(?:push|shift|length|val|left|right)\b)|(\b\d+\b)/g
   const html = escaped.replace(JS_RE, (_match, str, kw, method, num) => {
-    if (str)    return `<span style="color:var(--success)">${_match}</span>`
-    if (kw)     return `<span style="color:var(--accent)">${_match}</span>`
+    if (str) return `<span style="color:var(--success)">${_match}</span>`
+    if (kw) return `<span style="color:var(--accent)">${_match}</span>`
     if (method) return `<span style="color:var(--info)">${_match}</span>`
-    if (num)    return `<span style="color:var(--warning)">${_match}</span>`
+    if (num) return `<span style="color:var(--warning)">${_match}</span>`
     return _match
   })
   return <span dangerouslySetInnerHTML={{ __html: html }} />
 }
 
 const PANE_LABELS = ['Problem', 'Editor', 'Tests'] as const
-type PaneLabel = typeof PANE_LABELS[number]
+type PaneLabel = (typeof PANE_LABELS)[number]
 
 function ThreePanesMockup() {
   const lines = TREE_CODE.split('\n')
@@ -220,11 +245,9 @@ function ThreePanesMockup() {
         Medium
       </span>
       <p className="text-muted text-[10px] leading-relaxed font-sans">
-        Given the{' '}
-        <code className="bg-surface-2 px-1 rounded text-text">root</code>{' '}
-        of a binary tree, return the{' '}
-        <span className="text-text">level order traversal</span>{' '}
-        of its nodes&#39; values (left to right, level by level).
+        Given the <code className="bg-surface-2 px-1 rounded text-text">root</code> of a binary
+        tree, return the <span className="text-text">level order traversal</span> of its nodes&#39;
+        values (left to right, level by level).
       </p>
       <div className="bg-surface-2 border border-border rounded p-2 text-[10px] font-sans">
         <div className="text-subtle mb-1 tracking-wider">EXAMPLE 1</div>
@@ -232,8 +255,11 @@ function ThreePanesMockup() {
         <div className="text-success mt-0.5">Output: [[3],[9,20],[15,7]]</div>
       </div>
       <div className="flex gap-1.5 flex-wrap mt-auto">
-        {['Tree', 'BFS', 'Queue'].map(tag => (
-          <span key={tag} className="px-2 py-0.5 bg-surface-2 border border-border rounded text-[10px] text-muted font-sans">
+        {['Tree', 'BFS', 'Queue'].map((tag) => (
+          <span
+            key={tag}
+            className="px-2 py-0.5 bg-surface-2 border border-border rounded text-[10px] text-muted font-sans"
+          >
             {tag}
           </span>
         ))}
@@ -245,11 +271,15 @@ function ThreePanesMockup() {
     <div className="p-4 bg-bg overflow-x-auto h-full">
       <div className="flex gap-3 leading-[1.75] text-[11px] font-mono">
         <div className="text-subtle select-none text-right shrink-0" style={{ minWidth: 18 }}>
-          {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
+          {lines.map((_, i) => (
+            <div key={i}>{i + 1}</div>
+          ))}
         </div>
         <div className="overflow-hidden">
           {lines.map((line, i) => (
-            <div key={i} className="whitespace-pre">{line ? colorizeJS(line) : '\u00A0'}</div>
+            <div key={i} className="whitespace-pre">
+              {line ? colorizeJS(line) : '\u00A0'}
+            </div>
           ))}
         </div>
       </div>
@@ -258,12 +288,14 @@ function ThreePanesMockup() {
 
   const TestsPane = (
     <div className="p-4 bg-surface flex flex-col gap-2.5 h-full text-[11px] font-mono">
-      <div className="text-[10px] font-semibold text-subtle tracking-widest font-sans mb-1">TEST RESULTS</div>
+      <div className="text-[10px] font-semibold text-subtle tracking-widest font-sans mb-1">
+        TEST RESULTS
+      </div>
       {[
-        { label: 'Case 1',       time: '1ms' },
-        { label: 'Case 2',       time: '0ms' },
-        { label: 'Case 3',       time: '1ms' },
-        { label: 'Edge: empty',  time: '0ms' },
+        { label: 'Case 1', time: '1ms' },
+        { label: 'Case 2', time: '0ms' },
+        { label: 'Case 3', time: '1ms' },
+        { label: 'Edge: empty', time: '0ms' },
       ].map(({ label, time }) => (
         <div key={label} className="flex items-center justify-between">
           <span className="flex items-center gap-1 text-success font-sans">
@@ -287,8 +319,8 @@ function ThreePanesMockup() {
 
   const paneContent: Record<PaneLabel, React.ReactNode> = {
     Problem: ProblemPane,
-    Editor:  EditorPane,
-    Tests:   TestsPane,
+    Editor: EditorPane,
+    Tests: TestsPane,
   }
 
   return (
@@ -307,13 +339,15 @@ function ThreePanesMockup() {
           </div>
           {/* Desktop label row */}
           <div className="hidden md:flex text-[11px] text-subtle font-mono items-center gap-2">
-            <span>Problem</span><span className="text-border">·</span>
-            <span>Editor</span><span className="text-border">·</span>
+            <span>Problem</span>
+            <span className="text-border">·</span>
+            <span>Editor</span>
+            <span className="text-border">·</span>
             <span>Tests</span>
           </div>
           {/* Mobile tab switcher */}
           <div className="flex md:hidden items-center gap-0.5 bg-surface border border-border rounded-lg p-0.5">
-            {PANE_LABELS.map(label => (
+            {PANE_LABELS.map((label) => (
               <button
                 key={label}
                 onClick={() => setActivePane(label)}
@@ -356,7 +390,7 @@ function ThreePanesMockup() {
 
         {/* Mobile dot indicators */}
         <div className="md:hidden flex items-center justify-center gap-2 py-2 border-t border-border bg-surface-2">
-          {PANE_LABELS.map(label => (
+          {PANE_LABELS.map((label) => (
             <button
               key={label}
               onClick={() => setActivePane(label)}
@@ -372,9 +406,9 @@ function ThreePanesMockup() {
         {/* Desktop bottom bar */}
         <div className="hidden md:flex items-center justify-center gap-6 px-4 py-2.5 border-t border-border bg-surface-2">
           <Code2 size={13} className="text-subtle" />
-          <Brain  size={13} className="text-subtle" />
-          <Play   size={13} className="text-subtle" />
-          <Users  size={13} className="text-subtle" />
+          <Brain size={13} className="text-subtle" />
+          <Play size={13} className="text-subtle" />
+          <Users size={13} className="text-subtle" />
         </div>
       </div>
     </div>
@@ -388,7 +422,9 @@ export default function HomePage() {
   const { open: openPalette } = useCommandPalette()
   const [loading, setLoading] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  const [createdRoom, setCreatedRoom] = useState<{ roomId: string; inviteLink: string } | null>(null)
+  const [createdRoom, setCreatedRoom] = useState<{ roomId: string; inviteLink: string } | null>(
+    null,
+  )
   const [copied, setCopied] = useState(false)
   const [form, setForm] = useState<CreateRoomForm>({
     title: 'Interview session',
@@ -425,9 +461,9 @@ export default function HomePage() {
           hintsEnabled: form.hintsEnabled,
           maxHints: form.maxHints,
           scheduledAt,
-          candidateName:  form.isScheduled ? form.candidateName  : undefined,
+          candidateName: form.isScheduled ? form.candidateName : undefined,
           candidateEmail: form.candidateEmail || undefined,
-          description:    form.isScheduled ? form.description : undefined,
+          description: form.isScheduled ? form.description : undefined,
         }),
       })
       const data = await res.json()
@@ -453,25 +489,34 @@ export default function HomePage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const set = (key: keyof CreateRoomForm, val: any) => setForm(f => ({ ...f, [key]: val }))
+  const set = (key: keyof CreateRoomForm, val: any) => setForm((f) => ({ ...f, [key]: val }))
 
   return (
     <div className="min-h-screen bg-bg flex flex-col">
-
       {/* ── Navbar ── */}
       <nav className="h-14 sticky top-0 z-40 bg-bg/80 backdrop-blur-xl border-b border-border flex items-center px-6 gap-6">
         <Logo height={20} />
 
         {/* Center nav */}
         <div className="hidden md:flex items-center gap-1 flex-1">
-          {session && <>
-            <Link href="/dashboard" className="px-3 py-1.5 text-sm text-muted hover:text-text rounded-md hover:bg-surface-2 transition-colors flex items-center gap-1.5">
-              <LayoutDashboard size={14} />Dashboard
-            </Link>
-            <Link href="/schedule" className="px-3 py-1.5 text-sm text-muted hover:text-text rounded-md hover:bg-surface-2 transition-colors flex items-center gap-1.5">
-              <Calendar size={14} />Schedule
-            </Link>
-          </>}
+          {session && (
+            <>
+              <Link
+                href="/dashboard"
+                className="px-3 py-1.5 text-sm text-muted hover:text-text rounded-md hover:bg-surface-2 transition-colors flex items-center gap-1.5"
+              >
+                <LayoutDashboard size={14} />
+                Dashboard
+              </Link>
+              <Link
+                href="/schedule"
+                className="px-3 py-1.5 text-sm text-muted hover:text-text rounded-md hover:bg-surface-2 transition-colors flex items-center gap-1.5"
+              >
+                <Calendar size={14} />
+                Schedule
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
@@ -507,7 +552,8 @@ export default function HomePage() {
               href="/login"
               className="flex items-center gap-1.5 text-sm bg-accent hover:bg-accent-hover text-[#1a2a0e] px-4 h-9 rounded-md transition-colors font-semibold"
             >
-              <LogIn size={14} />Sign in
+              <LogIn size={14} />
+              Sign in
             </Link>
           )}
         </div>
@@ -515,8 +561,6 @@ export default function HomePage() {
 
       {/* ── Hero ── */}
       <main className="flex-1 flex flex-col items-center px-6 pt-24 pb-16 text-center">
-
-
         {/* H1 */}
         <motion.h1
           initial={{ opacity: 0, y: 12 }}
@@ -524,8 +568,7 @@ export default function HomePage() {
           transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
           className="text-5xl sm:text-6xl font-semibold text-text leading-[1.05] tracking-[-0.035em] mb-5 max-w-3xl"
         >
-          Run coding interviews{' '}
-          <span className="text-accent">you'd actually want to take.</span>
+          Run coding interviews <span className="text-accent">you'd actually want to take.</span>
         </motion.h1>
 
         {/* Sub */}
@@ -535,8 +578,8 @@ export default function HomePage() {
           transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="text-muted text-lg max-w-lg mb-10 leading-relaxed"
         >
-          Shared Monaco editor, live test execution, AI hints for candidates,
-          AI hire-review for interviewers — all in one seamless room.
+          Shared Monaco editor, live test execution, AI hints for candidates, AI hire-review for
+          interviewers — all in one seamless room.
         </motion.p>
 
         {/* CTAs */}
@@ -550,7 +593,12 @@ export default function HomePage() {
             Create interview room
           </Button>
           {session && (
-            <Button variant="secondary" size="lg" onClick={() => router.push('/dashboard')} icon={<LayoutDashboard size={15} />}>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={() => router.push('/dashboard')}
+              icon={<LayoutDashboard size={15} />}
+            >
               My interviews
             </Button>
           )}
@@ -568,11 +616,15 @@ export default function HomePage() {
 
         {/* How it works */}
         <div className="w-full max-w-4xl mt-24">
-          <h2 className="text-xs font-semibold text-subtle uppercase tracking-widest mb-8">How it works</h2>
+          <h2 className="text-xs font-semibold text-subtle uppercase tracking-widest mb-8">
+            How it works
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-border rounded-xl overflow-hidden">
             {STEPS.map(({ icon: Icon, num, title, desc }) => (
               <div key={title} className="bg-surface p-6 text-left relative overflow-hidden">
-                <div className="absolute top-3 right-3 text-4xl font-mono font-black text-border select-none leading-none">{num}</div>
+                <div className="absolute top-3 right-3 text-4xl font-mono font-black text-border select-none leading-none">
+                  {num}
+                </div>
                 <Icon size={20} className="text-accent mb-3" />
                 <h3 className="font-semibold text-text text-sm mb-1.5">{title}</h3>
                 <p className="text-muted text-xs leading-relaxed">{desc}</p>
@@ -619,7 +671,8 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <Logo height={16} linked={false} />
           <p className="font-mono text-xs text-subtle">
-            Made by <span className="text-accent">Shlok</span> · © {new Date().getFullYear()} CodeNest
+            Made by <span className="text-accent">Shlok</span> · © {new Date().getFullYear()}{' '}
+            CodeNest
           </p>
         </div>
       </footer>
@@ -642,7 +695,9 @@ export default function HomePage() {
                 <p className="text-sm text-muted">Share the invite link with your candidate</p>
               </div>
               <div className="w-full bg-surface-2 border border-border rounded-md px-3 py-2 flex items-center gap-2">
-                <span className="flex-1 font-mono text-xs text-muted truncate">{createdRoom.inviteLink}</span>
+                <span className="flex-1 font-mono text-xs text-muted truncate">
+                  {createdRoom.inviteLink}
+                </span>
                 <button onClick={copyInvite} className="text-muted hover:text-accent flex-shrink-0">
                   {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
                 </button>
@@ -651,7 +706,12 @@ export default function HomePage() {
                 <Button variant="secondary" className="flex-1" onClick={() => setShowModal(false)}>
                   Close
                 </Button>
-                <Button variant="primary" className="flex-1" onClick={() => router.push(`/room/${createdRoom.roomId}`)} icon={<ArrowRight size={14} />}>
+                <Button
+                  variant="primary"
+                  className="flex-1"
+                  onClick={() => router.push(`/room/${createdRoom.roomId}`)}
+                  icon={<ArrowRight size={14} />}
+                >
                   Enter room
                 </Button>
               </div>
@@ -666,7 +726,7 @@ export default function HomePage() {
                 <label className="text-xs font-medium text-muted block mb-1.5">Session title</label>
                 <input
                   value={form.title}
-                  onChange={e => set('title', e.target.value)}
+                  onChange={(e) => set('title', e.target.value)}
                   placeholder="e.g. Senior Frontend Engineer — Round 2"
                   className="w-full h-9 bg-surface border border-border text-text rounded-md px-3 text-sm focus:outline-none focus:border-accent transition-colors"
                 />
@@ -680,14 +740,14 @@ export default function HomePage() {
                 <Segmented
                   options={DURATION_OPTIONS}
                   value={String(form.durationMinutes)}
-                  onChange={v => set('durationMinutes', parseInt(v))}
+                  onChange={(v) => set('durationMinutes', parseInt(v))}
                 />
               </div>
 
               {/* Hints */}
               <Switch
                 checked={form.hintsEnabled}
-                onChange={v => set('hintsEnabled', v)}
+                onChange={(v) => set('hintsEnabled', v)}
                 label="AI hints"
                 description="Allow candidate to request Gemini hints"
               />
@@ -698,9 +758,12 @@ export default function HomePage() {
                     Max hints <span className="text-accent">{form.maxHints}</span>
                   </label>
                   <input
-                    type="range" min={1} max={10} step={1}
+                    type="range"
+                    min={1}
+                    max={10}
+                    step={1}
                     value={form.maxHints}
-                    onChange={e => set('maxHints', parseInt(e.target.value))}
+                    onChange={(e) => set('maxHints', parseInt(e.target.value))}
                     className="w-full accent-accent"
                   />
                 </div>
@@ -710,7 +773,7 @@ export default function HomePage() {
               <div className="border-t border-border pt-4">
                 <Switch
                   checked={form.isScheduled}
-                  onChange={v => set('isScheduled', v)}
+                  onChange={(v) => set('isScheduled', v)}
                   label="Schedule for later"
                   description="Set a date, time and candidate details"
                 />
@@ -726,40 +789,73 @@ export default function HomePage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="text-[10px] font-medium text-muted block mb-1">Date</label>
-                      <input type="date" value={form.scheduledDate} onChange={e => set('scheduledDate', e.target.value)}
-                        className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent" />
+                      <input
+                        type="date"
+                        value={form.scheduledDate}
+                        onChange={(e) => set('scheduledDate', e.target.value)}
+                        className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent"
+                      />
                     </div>
                     <div>
                       <label className="text-[10px] font-medium text-muted block mb-1">Time</label>
-                      <input type="time" value={form.scheduledTime} onChange={e => set('scheduledTime', e.target.value)}
-                        className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent" />
+                      <input
+                        type="time"
+                        value={form.scheduledTime}
+                        onChange={(e) => set('scheduledTime', e.target.value)}
+                        className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent"
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] font-medium text-muted block mb-1">Candidate name</label>
-                      <input type="text" value={form.candidateName} onChange={e => set('candidateName', e.target.value)}
-                        placeholder="Full name" className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent" />
+                      <label className="text-[10px] font-medium text-muted block mb-1">
+                        Candidate name
+                      </label>
+                      <input
+                        type="text"
+                        value={form.candidateName}
+                        onChange={(e) => set('candidateName', e.target.value)}
+                        placeholder="Full name"
+                        className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent"
+                      />
                     </div>
                     <div>
-                      <label className="text-[10px] font-medium text-muted block mb-1">Candidate email</label>
-                      <input type="email" value={form.candidateEmail} onChange={e => set('candidateEmail', e.target.value)}
-                        placeholder="candidate@email.com" className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent" />
+                      <label className="text-[10px] font-medium text-muted block mb-1">
+                        Candidate email
+                      </label>
+                      <input
+                        type="email"
+                        value={form.candidateEmail}
+                        onChange={(e) => set('candidateEmail', e.target.value)}
+                        placeholder="candidate@email.com"
+                        className="w-full bg-surface border border-border text-text rounded-md px-3 py-1.5 text-xs focus:outline-none focus:border-accent"
+                      />
                     </div>
                   </div>
                   <div>
                     <label className="text-[10px] font-medium text-muted block mb-1">Notes</label>
-                    <textarea rows={2} value={form.description} onChange={e => set('description', e.target.value)}
+                    <textarea
+                      rows={2}
+                      value={form.description}
+                      onChange={(e) => set('description', e.target.value)}
                       placeholder="Interview notes, focus areas…"
-                      className="w-full bg-surface border border-border text-text rounded-md px-3 py-2 text-xs focus:outline-none focus:border-accent resize-none" />
+                      className="w-full bg-surface border border-border text-text rounded-md px-3 py-2 text-xs focus:outline-none focus:border-accent resize-none"
+                    />
                   </div>
                 </motion.div>
               )}
             </DialogBody>
 
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>
-              <Button variant="primary" loading={loading} onClick={createRoom} icon={<Plus size={14} />}>
+              <Button variant="ghost" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                loading={loading}
+                onClick={createRoom}
+                icon={<Plus size={14} />}
+              >
                 {form.isScheduled ? 'Schedule interview' : 'Create room & get invite link'}
               </Button>
             </DialogFooter>

@@ -1,6 +1,6 @@
 'use client'
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/cn'
+import { motion } from 'framer-motion'
 
 interface TabItem {
   id: string
@@ -17,7 +17,14 @@ interface TabsProps {
   size?: 'sm' | 'default'
 }
 
-export function Tabs({ tabs, active, onChange, layoutId = 'tab-underline', className, size = 'default' }: TabsProps) {
+export function Tabs({
+  tabs,
+  active,
+  onChange,
+  layoutId = 'tab-underline',
+  className,
+  size = 'default',
+}: TabsProps) {
   return (
     <div className={cn('flex border-b border-border', className)}>
       {tabs.map((tab) => (
@@ -27,7 +34,7 @@ export function Tabs({ tabs, active, onChange, layoutId = 'tab-underline', class
           className={cn(
             'relative flex items-center gap-1.5 transition-colors duration-[120ms] flex-shrink-0',
             size === 'sm' ? 'px-3 py-2 text-xs' : 'px-3 py-2.5 text-sm',
-            active === tab.id ? 'text-text font-medium' : 'text-muted hover:text-text'
+            active === tab.id ? 'text-text font-medium' : 'text-muted hover:text-text',
           )}
         >
           {tab.label}
@@ -44,7 +51,6 @@ export function Tabs({ tabs, active, onChange, layoutId = 'tab-underline', class
     </div>
   )
 }
-
 
 interface SegmentedProps {
   options: { value: string; label: React.ReactNode }[]
@@ -64,7 +70,7 @@ export function Segmented({ options, value, onChange, className }: SegmentedProp
             'px-3 h-7 text-xs rounded-[5px] transition-colors duration-[120ms] flex-1',
             value === opt.value
               ? 'bg-bg text-text shadow-sm font-medium'
-              : 'text-muted hover:text-text'
+              : 'text-muted hover:text-text',
           )}
         >
           {opt.label}

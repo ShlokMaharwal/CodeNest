@@ -11,7 +11,6 @@ interface AvatarProps {
 
 const sizes = { sm: 'w-6 h-6 text-[10px]', default: 'w-7 h-7 text-xs', lg: 'w-9 h-9 text-sm' }
 
-
 export function hashColor(str: string): string {
   let hash = 0
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
@@ -19,7 +18,13 @@ export function hashColor(str: string): string {
   return `hsl(${h}, 65%, 52%)`
 }
 
-export function Avatar({ name, color, size = 'default', showRing = false, className }: AvatarProps) {
+export function Avatar({
+  name,
+  color,
+  size = 'default',
+  showRing = false,
+  className,
+}: AvatarProps) {
   const bg = color || hashColor(name)
   return (
     <div
@@ -27,7 +32,7 @@ export function Avatar({ name, color, size = 'default', showRing = false, classN
         'rounded-full flex items-center justify-center font-semibold text-white flex-shrink-0 select-none transition-all duration-[120ms]',
         sizes[size],
         showRing && 'ring-2 ring-accent ring-offset-2 ring-offset-bg',
-        className
+        className,
       )}
       style={{ backgroundColor: bg }}
       title={name}

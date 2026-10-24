@@ -1,6 +1,6 @@
 'use client'
-import { forwardRef } from 'react'
 import { cn } from '@/lib/cn'
+import { forwardRef } from 'react'
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   iconLeft?: React.ReactNode
@@ -32,10 +32,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               'focus:outline-none focus:border-accent focus:shadow-glow',
               'disabled:bg-surface-2 disabled:opacity-60 disabled:cursor-not-allowed',
               error && 'border-danger focus:border-danger focus:shadow-none',
-              iconLeft  && 'pl-9',
+              iconLeft && 'pl-9',
               iconRight && 'pr-9',
               !iconLeft && 'px-3',
-              className
+              className,
             )}
             {...props}
           />
@@ -45,11 +45,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </span>
           )}
         </div>
-        {error && (
-          <p className="mt-1 text-xs text-danger">{error}</p>
-        )}
+        {error && <p className="mt-1 text-xs text-danger">{error}</p>}
       </div>
     )
-  }
+  },
 )
 Input.displayName = 'Input'

@@ -1,8 +1,8 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import { AnimatePresence, motion } from 'framer-motion'
+import { X } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 
 interface DialogProps {
   open: boolean
@@ -15,7 +15,6 @@ interface DialogProps {
 export function Dialog({ open, onClose, children, className, maxWidth = 'max-w-md' }: DialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
-  
   useEffect(() => {
     if (!open) return
     const handleKey = (e: KeyboardEvent) => {
@@ -51,7 +50,8 @@ export function Dialog({ open, onClose, children, className, maxWidth = 'max-w-m
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               'relative w-full bg-bg-elevated border border-border rounded-xl shadow-lg',
-              maxWidth, className
+              maxWidth,
+              className,
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -63,7 +63,13 @@ export function Dialog({ open, onClose, children, className, maxWidth = 'max-w-m
   )
 }
 
-export function DialogHeader({ children, onClose }: { children: React.ReactNode; onClose?: () => void }) {
+export function DialogHeader({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode
+  onClose?: () => void
+}) {
   return (
     <div className="flex items-center justify-between px-6 py-4 border-b border-border">
       <div className="font-semibold text-text text-sm">{children}</div>
@@ -80,14 +86,16 @@ export function DialogHeader({ children, onClose }: { children: React.ReactNode;
   )
 }
 
-export function DialogBody({ children, className }: { children: React.ReactNode; className?: string }) {
+export function DialogBody({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
   return <div className={cn('px-6 py-5', className)}>{children}</div>
 }
 
 export function DialogFooter({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="px-6 pb-5 flex items-center justify-end gap-2">
-      {children}
-    </div>
-  )
+  return <div className="px-6 pb-5 flex items-center justify-end gap-2">{children}</div>
 }

@@ -7,24 +7,25 @@ A 2-person role-based coding interview platform. Interviewer watches. Candidate 
 ## 📸 Demo
 
 ### Home Page
+
 ![CodeNest home page](./docs/images/homepage.png)
 
 ### Interview Room
-![CodeNest interview room screenshot](./docs/images/interview-room.png)
 
+![CodeNest interview room screenshot](./docs/images/interview-room.png)
 
 ## Tech Stack
 
-| Layer | Tech |
-|---|---|
-| Frontend + API | Next.js 15 App Router |
-| Real-time sync | Socket.io |
-| Database | MongoDB Atlas M0 |
-| Room state | Upstash Redis / Local Redis |
-| Code execution | Wandbox API |
-| AI hints + review | Gemini 2.0 Flash |
-| Auth | NextAuth + bcrypt |
-| Deployment | Render free tier |
+| Layer             | Tech                        |
+| ----------------- | --------------------------- |
+| Frontend + API    | Next.js 15 App Router       |
+| Real-time sync    | Socket.io                   |
+| Database          | MongoDB Atlas M0            |
+| Room state        | Upstash Redis / Local Redis |
+| Code execution    | Wandbox API                 |
+| AI hints + review | Gemini 2.0 Flash            |
+| Auth              | NextAuth + bcrypt           |
+| Deployment        | Render free tier            |
 
 ## Quick Start
 
@@ -56,26 +57,26 @@ Visit `http://localhost:3000`
 
 ## API Reference
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/rooms` | POST / GET | Create room + invite link / list interviewer's rooms |
-| `/api/rooms/[id]` | GET | Room info + snapshots |
-| `/api/rooms/[id]/invite` | GET | Get invite link |
-| `/api/execute` | POST | Run code via Wandbox |
-| `/api/ai/hint` | POST | Get AI hint (candidate) |
-| `/api/ai/review` | POST | Get AI review (interviewer) |
-| `/api/problems` | GET | List problems (paginated) |
-| `/api/problems/[id]` | GET | Single problem |
-| `/api/health` | GET | Health check |
+| Endpoint                 | Method     | Description                                          |
+| ------------------------ | ---------- | ---------------------------------------------------- |
+| `/api/rooms`             | POST / GET | Create room + invite link / list interviewer's rooms |
+| `/api/rooms/[id]`        | GET        | Room info + snapshots                                |
+| `/api/rooms/[id]/invite` | GET        | Get invite link                                      |
+| `/api/execute`           | POST       | Run code via Wandbox                                 |
+| `/api/ai/hint`           | POST       | Get AI hint (candidate)                              |
+| `/api/ai/review`         | POST       | Get AI review (interviewer)                          |
+| `/api/problems`          | GET        | List problems (paginated)                            |
+| `/api/problems/[id]`     | GET        | Single problem                                       |
+| `/api/health`            | GET        | Health check                                         |
 
 ## Key Socket Events
 
-| Event | Direction | Description |
-|---|---|---|
-| `join-room` | Client → Server | Join with invite token |
-| `code-change` | Client → Server | Code update |
-| `editor-lock` / `take-control` / `return-control` | Interviewer → Server | Editor access controls |
-| `problem-change` | Interviewer → Server | Switch problem |
-| `timer-start` | Interviewer → Server | Start countdown |
-| `interview-end` | Interviewer → Server | End interview + save snapshot |
-| `interview-ended` | Server → Client | Interview over + replay link |
+| Event                                             | Direction            | Description                   |
+| ------------------------------------------------- | -------------------- | ----------------------------- |
+| `join-room`                                       | Client → Server      | Join with invite token        |
+| `code-change`                                     | Client → Server      | Code update                   |
+| `editor-lock` / `take-control` / `return-control` | Interviewer → Server | Editor access controls        |
+| `problem-change`                                  | Interviewer → Server | Switch problem                |
+| `timer-start`                                     | Interviewer → Server | Start countdown               |
+| `interview-end`                                   | Interviewer → Server | End interview + save snapshot |
+| `interview-ended`                                 | Server → Client      | Interview over + replay link  |

@@ -1,6 +1,6 @@
 'use client'
-import { motion } from 'framer-motion'
 import { cn } from '@/lib/cn'
+import { motion } from 'framer-motion'
 
 interface SwitchProps {
   checked: boolean
@@ -27,7 +27,7 @@ export function Switch({ checked, onChange, label, description, disabled }: Swit
         className={cn(
           'relative w-9 h-5 rounded-full transition-colors duration-[180ms] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg flex-shrink-0',
           checked ? 'bg-accent' : 'bg-border-strong',
-          disabled && 'opacity-50 cursor-not-allowed'
+          disabled && 'opacity-50 cursor-not-allowed',
         )}
       >
         <motion.div
@@ -35,7 +35,7 @@ export function Switch({ checked, onChange, label, description, disabled }: Swit
           transition={{ type: 'spring', stiffness: 500, damping: 35 }}
           className={cn(
             'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm',
-            checked ? 'left-[18px]' : 'left-0.5'
+            checked ? 'left-[18px]' : 'left-0.5',
           )}
         />
       </button>

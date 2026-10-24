@@ -1,7 +1,6 @@
 'use client'
-import { useState } from 'react'
 import { TestCase } from '@/types'
-import { Plus, Trash2, CheckCircle2, XCircle } from 'lucide-react'
+import { CheckCircle2, Plus, Trash2, XCircle } from 'lucide-react'
 
 interface TestCasePanelProps {
   testCases: TestCase[]
@@ -10,15 +9,23 @@ interface TestCasePanelProps {
 }
 
 function getStatusPill(tc: TestCase) {
-  if (tc.passed === undefined) return <span className="text-[10px] text-subtle bg-surface-2 border border-border rounded-full px-2 py-0.5">Pending</span>
-  if (tc.passed) return (
-    <span className="text-[10px] text-success bg-success-soft border border-success/25 rounded-full px-2 py-0.5 flex items-center gap-1">
-      <CheckCircle2 size={9} />Pass
-    </span>
-  )
+  if (tc.passed === undefined)
+    return (
+      <span className="text-[10px] text-subtle bg-surface-2 border border-border rounded-full px-2 py-0.5">
+        Pending
+      </span>
+    )
+  if (tc.passed)
+    return (
+      <span className="text-[10px] text-success bg-success-soft border border-success/25 rounded-full px-2 py-0.5 flex items-center gap-1">
+        <CheckCircle2 size={9} />
+        Pass
+      </span>
+    )
   return (
     <span className="text-[10px] text-danger bg-danger-soft border border-danger/25 rounded-full px-2 py-0.5 flex items-center gap-1">
-      <XCircle size={9} />Fail
+      <XCircle size={9} />
+      Fail
     </span>
   )
 }
@@ -35,10 +42,16 @@ export function TestCasePanel({ testCases, onChange, readOnly = false }: TestCas
   return (
     <div className="h-full overflow-y-auto p-3">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-muted">{testCases.length} test case{testCases.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs font-medium text-muted">
+          {testCases.length} test case{testCases.length !== 1 ? 's' : ''}
+        </span>
         {!readOnly && (
-          <button onClick={add} className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors font-medium">
-            <Plus size={12} />Add
+          <button
+            onClick={add}
+            className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover transition-colors font-medium"
+          >
+            <Plus size={12} />
+            Add
           </button>
         )}
       </div>
@@ -64,22 +77,26 @@ export function TestCasePanel({ testCases, onChange, readOnly = false }: TestCas
             </div>
 
             <div>
-              <label className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1 block">Input (stdin)</label>
+              <label className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1 block">
+                Input (stdin)
+              </label>
               <textarea
                 rows={2}
                 value={tc.input}
-                onChange={e => update(i, 'input', e.target.value)}
+                onChange={(e) => update(i, 'input', e.target.value)}
                 readOnly={readOnly}
                 placeholder="Input for this test case…"
                 className="w-full bg-bg border border-border rounded text-xs font-mono p-2 text-text resize-none focus:outline-none focus:border-accent transition-colors placeholder:text-subtle"
               />
             </div>
             <div>
-              <label className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1 block">Expected output</label>
+              <label className="text-[10px] font-medium text-subtle uppercase tracking-wider mb-1 block">
+                Expected output
+              </label>
               <textarea
                 rows={2}
                 value={tc.expectedOutput}
-                onChange={e => update(i, 'expectedOutput', e.target.value)}
+                onChange={(e) => update(i, 'expectedOutput', e.target.value)}
                 readOnly={readOnly}
                 placeholder="Expected output…"
                 className="w-full bg-bg border border-border rounded text-xs font-mono p-2 text-text resize-none focus:outline-none focus:border-accent transition-colors placeholder:text-subtle"
@@ -88,12 +105,20 @@ export function TestCasePanel({ testCases, onChange, readOnly = false }: TestCas
 
             {}
             {tc.passed !== undefined && tc.actualOutput !== undefined && (
-              <div className={`rounded p-2 text-[10px] font-mono ${tc.passed ? 'bg-success-soft border border-success/20' : 'bg-danger-soft border border-danger/20'}`}>
+              <div
+                className={`rounded p-2 text-[10px] font-mono ${tc.passed ? 'bg-success-soft border border-success/20' : 'bg-danger-soft border border-danger/20'}`}
+              >
                 <div className={tc.passed ? 'text-success' : 'text-danger'}>
                   <strong>Got:</strong> {tc.actualOutput || '(empty)'}
                 </div>
-                {!tc.passed && <div className="text-muted mt-0.5"><strong>Expected:</strong> {tc.expectedOutput}</div>}
-                {tc.stderr && <div className="text-danger mt-0.5 whitespace-pre-wrap">{tc.stderr}</div>}
+                {!tc.passed && (
+                  <div className="text-muted mt-0.5">
+                    <strong>Expected:</strong> {tc.expectedOutput}
+                  </div>
+                )}
+                {tc.stderr && (
+                  <div className="text-danger mt-0.5 whitespace-pre-wrap">{tc.stderr}</div>
+                )}
               </div>
             )}
           </div>

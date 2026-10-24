@@ -11,7 +11,10 @@ const config = [
     rules: {
       // Existing UI and Mongoose boundaries use dynamic data; narrow them as touched.
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
       // Keep the existing literal UI copy unchanged.
       'react/no-unescaped-entities': 'off',
     },

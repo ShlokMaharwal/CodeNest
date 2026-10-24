@@ -1,6 +1,6 @@
 'use client'
+import { ArrowLeft, Users } from 'lucide-react'
 import Link from 'next/link'
-import { Users, ArrowLeft } from 'lucide-react'
 
 export default function RoomFullPage() {
   return (
@@ -14,13 +14,15 @@ export default function RoomFullPage() {
           This interview room already has 2 participants.
         </p>
         <p className="text-subtle text-xs leading-relaxed mb-8">
-          Each room supports exactly one interviewer and one candidate. The session is currently in progress.
+          Each room supports exactly one interviewer and one candidate. The session is currently in
+          progress.
         </p>
         <Link
           href="/"
           className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-[#1a2a0e] px-5 py-2.5 rounded-md text-sm font-medium transition-colors"
         >
-          <ArrowLeft size={15} />Back to home
+          <ArrowLeft size={15} />
+          Back to home
         </Link>
       </div>
     </div>

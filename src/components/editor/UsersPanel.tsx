@@ -6,13 +6,11 @@ interface UsersPanelProps {
   currentUser: any
 }
 
-export function UsersPanel({ users, currentUser }: UsersPanelProps) {
+export function UsersPanel({ users, currentUser: _currentUser }: UsersPanelProps) {
   return (
     <div className="flex items-center gap-1.5">
       {users.length > 0 && (
-        <span className="text-xs text-muted mr-1 hidden sm:block">
-          {users.length} online
-        </span>
+        <span className="text-xs text-muted mr-1 hidden sm:block">{users.length} online</span>
       )}
       <div className="flex -space-x-2">
         {users.slice(0, 4).map((user) => (

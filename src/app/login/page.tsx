@@ -1,13 +1,13 @@
 'use client'
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Segmented } from '@/components/ui/Tabs'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { signIn } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
 const CODE_LINES = [
   'function twoSum(nums, target) {',
@@ -30,7 +30,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
 
-  const set = (k: keyof typeof form, v: string) => setForm(f => ({ ...f, [k]: v }))
+  const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }))
 
   const handleSubmit = async () => {
     setError('')
@@ -43,15 +43,21 @@ export default function LoginPage() {
           body: JSON.stringify(form),
         })
         const data = await res.json()
-        if (!res.ok) { setError(data.error); setLoading(false); return }
+        if (!res.ok) {
+          setError(data.error)
+          setLoading(false)
+          return
+        }
       }
       const result = await signIn('credentials', {
         email: form.email,
         password: form.password,
         redirect: false,
       })
-      if (result?.error) { setError('Invalid email or password'); setLoading(false) }
-      else router.push('/')
+      if (result?.error) {
+        setError('Invalid email or password')
+        setLoading(false)
+      } else router.push('/')
     } catch {
       setError('Something went wrong')
       setLoading(false)
@@ -74,7 +80,7 @@ export default function LoginPage() {
 
           {/* Logo */}
           <div className="flex items-center justify-center mb-10">
-          <Logo height={24} />
+            <Logo height={24} />
           </div>
           {}
           <div className="mb-6">
@@ -91,11 +97,14 @@ export default function LoginPage() {
           {}
           <Segmented
             options={[
-              { value: 'signin',   label: 'Sign in' },
+              { value: 'signin', label: 'Sign in' },
               { value: 'register', label: 'Register' },
             ]}
             value={mode}
-            onChange={v => { setMode(v as any); setError('') }}
+            onChange={(v) => {
+              setMode(v as any)
+              setError('')
+            }}
             className="mb-6"
           />
 
@@ -112,7 +121,7 @@ export default function LoginPage() {
                   <Input
                     label="Name"
                     value={form.name}
-                    onChange={e => set('name', e.target.value)}
+                    onChange={(e) => set('name', e.target.value)}
                     placeholder="Your name"
                   />
                 </motion.div>
@@ -123,7 +132,7 @@ export default function LoginPage() {
               label="Email"
               type="email"
               value={form.email}
-              onChange={e => set('email', e.target.value)}
+              onChange={(e) => set('email', e.target.value)}
               placeholder="you@example.com"
             />
 
@@ -131,13 +140,13 @@ export default function LoginPage() {
               label="Password"
               type={showPass ? 'text' : 'password'}
               value={form.password}
-              onChange={e => set('password', e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              onChange={(e) => set('password', e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="••••••••"
               iconRight={
                 <button
                   type="button"
-                  onClick={() => setShowPass(v => !v)}
+                  onClick={() => setShowPass((v) => !v)}
                   className="text-muted hover:text-text transition-colors"
                   tabIndex={-1}
                 >
@@ -194,7 +203,9 @@ export default function LoginPage() {
           ))}
           {}
           <div className="flex gap-3 mt-1">
-            <span className="text-subtle select-none w-4 text-right text-xs">{CODE_LINES.length + 1}</span>
+            <span className="text-subtle select-none w-4 text-right text-xs">
+              {CODE_LINES.length + 1}
+            </span>
             <span className="inline-block w-[2px] h-4 bg-accent animate-pulse-slow" />
           </div>
         </div>

@@ -1,22 +1,43 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import {
-  Plus, Calendar, Clock, User, Mail, FileText, Edit3,
-  Trash2, ArrowRight, LayoutDashboard, LogOut, ChevronLeft,
-  ChevronRight, AlertCircle, BookOpen, Lightbulb, Timer, Save,
-  Search, Phone, Briefcase, Link2, Star, CheckCircle2,
-  ExternalLink, Copy, Check
-} from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { ThemeToggle } from '@/components/ThemeToggle'
-import { signOut } from 'next-auth/react'
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
+import { Dialog, DialogBody, DialogFooter, DialogHeader } from '@/components/ui/Dialog'
 import { Input } from '@/components/ui/Input'
 import { Switch } from '@/components/ui/Switch'
-import { Logo } from '@/components/Logo'
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  Briefcase,
+  Calendar,
+  Check,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Copy,
+  Edit3,
+  ExternalLink,
+  FileText,
+  LayoutDashboard,
+  Lightbulb,
+  Link2,
+  LogOut,
+  Mail,
+  Phone,
+  Plus,
+  Save,
+  Search,
+  Star,
+  Timer,
+  Trash2,
+  User,
+} from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 
 type ExperienceLevel = 'junior' | 'mid' | 'senior' | 'staff' | 'principal'
 
@@ -69,29 +90,39 @@ const EXP_LABELS: Record<ExperienceLevel, string> = {
 }
 
 const EXP_COLORS: Record<ExperienceLevel, string> = {
-  junior:    'text-info    bg-info-soft    border-info/25',
-  mid:       'text-success bg-success-soft border-success/25',
-  senior:    'text-accent  bg-accent-soft  border-accent/25',
-  staff:     'text-warning bg-warning-soft border-warning/25',
+  junior: 'text-info    bg-info-soft    border-info/25',
+  mid: 'text-success bg-success-soft border-success/25',
+  senior: 'text-accent  bg-accent-soft  border-accent/25',
+  staff: 'text-warning bg-warning-soft border-warning/25',
   principal: 'text-danger  bg-danger-soft  border-danger/25',
 }
 
-function formatDateTime(dateStr: string): string {
+function _formatDateTime(dateStr: string): string {
   return new Date(dateStr).toLocaleString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric',
-    year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
   })
 }
 
-function formatDate(dateStr: string): string {
+function _formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
   })
 }
 
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit', hour12: true,
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
   })
 }
 
@@ -118,10 +149,20 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 const MONTH_NAMES = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ]
-const DAY_NAMES = ['Su','Mo','Tu','We','Th','Fr','Sa']
+const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 const DEFAULT_CREATE_FORM = {
   title: 'Interview Session',
@@ -147,32 +188,26 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
 
-  
   const today = new Date()
   const [calMonth, setCalMonth] = useState(today.getMonth())
   const [calYear, setCalYear] = useState(today.getFullYear())
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
 
-  
   const [editRoom, setEditRoom] = useState<ScheduledRoom | null>(null)
   const [editForm, setEditForm] = useState<EditForm | null>(null)
   const [editSaving, setEditSaving] = useState(false)
   const [editError, setEditError] = useState('')
 
-  
   const [deleteRoomId, setDeleteRoomId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  
   const [showCreate, setShowCreate] = useState(false)
   const [createForm, setCreateForm] = useState(DEFAULT_CREATE_FORM)
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
 
-  
   const [createdInterview, setCreatedInterview] = useState<CreatedInterview | null>(null)
   const [copiedInvite, setCopiedInvite] = useState(false)
 
@@ -194,10 +229,10 @@ export default function SchedulePage() {
     fetchRooms()
   }, [fetchRooms])
 
-  const scheduledRooms = rooms.filter(r => r.scheduledAt)
-  const unscheduledActive = rooms.filter(r => !r.scheduledAt && r.status !== 'ended')
+  const scheduledRooms = rooms.filter((r) => r.scheduledAt)
+  const unscheduledActive = rooms.filter((r) => !r.scheduledAt && r.status !== 'ended')
 
-  const filteredRooms = scheduledRooms.filter(r => {
+  const filteredRooms = scheduledRooms.filter((r) => {
     const q = searchQuery.toLowerCase()
     return (
       r.title.toLowerCase().includes(q) ||
@@ -208,7 +243,9 @@ export default function SchedulePage() {
   })
 
   const displayRooms = selectedDate
-    ? filteredRooms.filter(r => r.scheduledAt && new Date(r.scheduledAt).toDateString() === selectedDate)
+    ? filteredRooms.filter(
+        (r) => r.scheduledAt && new Date(r.scheduledAt).toDateString() === selectedDate,
+      )
     : filteredRooms
 
   const sortedRooms = [...displayRooms].sort((a, b) => {
@@ -217,16 +254,16 @@ export default function SchedulePage() {
     return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
   })
 
-  const upcomingRooms = sortedRooms.filter(r => r.scheduledAt && isUpcoming(r.scheduledAt))
-  const pastScheduledRooms = sortedRooms.filter(r => r.scheduledAt && !isUpcoming(r.scheduledAt))
+  const upcomingRooms = sortedRooms.filter((r) => r.scheduledAt && isUpcoming(r.scheduledAt))
+  const pastScheduledRooms = sortedRooms.filter((r) => r.scheduledAt && !isUpcoming(r.scheduledAt))
 
   const scheduledDates = new Set(
     scheduledRooms
-      .filter(r => r.scheduledAt)
-      .map(r => {
+      .filter((r) => r.scheduledAt)
+      .map((r) => {
         const d = new Date(r.scheduledAt!)
         return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
-      })
+      }),
   )
 
   const openEdit = (room: ScheduledRoom) => {
@@ -317,7 +354,9 @@ export default function SchedulePage() {
     setCreating(true)
     setCreateError('')
     try {
-      const scheduledAt = new Date(`${createForm.scheduledDate}T${createForm.scheduledTime}`).toISOString()
+      const scheduledAt = new Date(
+        `${createForm.scheduledDate}T${createForm.scheduledTime}`,
+      ).toISOString()
       const res = await fetch('/api/rooms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -363,7 +402,6 @@ export default function SchedulePage() {
     setTimeout(() => setCopiedInvite(false), 2500)
   }
 
-  
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(calYear, calMonth)
     const firstDay = getFirstDayOfMonth(calYear, calMonth)
@@ -376,8 +414,10 @@ export default function SchedulePage() {
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => {
-              if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1) }
-              else setCalMonth(m => m - 1)
+              if (calMonth === 0) {
+                setCalMonth(11)
+                setCalYear((y) => y - 1)
+              } else setCalMonth((m) => m - 1)
             }}
             className="p-1.5 rounded-lg hover:bg-bg text-muted hover:text-text transition-colors"
           >
@@ -388,8 +428,10 @@ export default function SchedulePage() {
           </span>
           <button
             onClick={() => {
-              if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1) }
-              else setCalMonth(m => m + 1)
+              if (calMonth === 11) {
+                setCalMonth(0)
+                setCalYear((y) => y + 1)
+              } else setCalMonth((m) => m + 1)
             }}
             className="p-1.5 rounded-lg hover:bg-bg text-muted hover:text-text transition-colors"
           >
@@ -399,8 +441,10 @@ export default function SchedulePage() {
 
         {}
         <div className="grid grid-cols-7 mb-1">
-          {DAY_NAMES.map(d => (
-            <div key={d} className="text-center text-[10px] font-medium text-muted py-1">{d}</div>
+          {DAY_NAMES.map((d) => (
+            <div key={d} className="text-center text-[10px] font-medium text-muted py-1">
+              {d}
+            </div>
           ))}
         </div>
 
@@ -410,7 +454,10 @@ export default function SchedulePage() {
             if (!day) return <div key={`empty-${i}`} />
             const dateStr = new Date(calYear, calMonth, day).toDateString()
             const hasEvent = scheduledDates.has(`${calYear}-${calMonth}-${day}`)
-            const isToday = today.getDate() === day && today.getMonth() === calMonth && today.getFullYear() === calYear
+            const isToday =
+              today.getDate() === day &&
+              today.getMonth() === calMonth &&
+              today.getFullYear() === calYear
             const isSelected = selectedDate === dateStr
 
             return (
@@ -421,8 +468,8 @@ export default function SchedulePage() {
                   isSelected
                     ? 'bg-accent text-[#1a2a0e] font-semibold'
                     : isToday
-                    ? 'bg-accent/15 text-accent font-semibold border border-accent/40'
-                    : 'hover:bg-bg text-text'
+                      ? 'bg-accent/15 text-accent font-semibold border border-accent/40'
+                      : 'hover:bg-bg text-text'
                 }`}
               >
                 {day}
@@ -455,7 +502,9 @@ export default function SchedulePage() {
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-muted">In progress</span>
-            <span className="font-semibold text-success">{rooms.filter(r => r.status === 'active').length}</span>
+            <span className="font-semibold text-success">
+              {rooms.filter((r) => r.status === 'active').length}
+            </span>
           </div>
         </div>
       </div>
@@ -478,7 +527,7 @@ export default function SchedulePage() {
       {}
       <nav className="border-b border-border px-6 py-3.5 flex items-center justify-between sticky top-0 bg-bg/95 backdrop-blur z-40">
         <div className="flex items-center gap-3">
-        <Logo height={20} />
+          <Logo height={20} />
           <div className="h-4 w-px bg-border" />
           <span className="text-sm text-muted flex items-center gap-1.5">
             <Calendar size={14} />
@@ -523,7 +572,10 @@ export default function SchedulePage() {
           </div>
           <Button
             id="schedule-interview-btn"
-            onClick={() => { setShowCreate(true); setCreateError('') }}
+            onClick={() => {
+              setShowCreate(true)
+              setCreateError('')
+            }}
             variant="primary"
             icon={<Plus size={15} />}
           >
@@ -543,14 +595,17 @@ export default function SchedulePage() {
                   Active Rooms
                 </h3>
                 <div className="space-y-2">
-                  {unscheduledActive.map(room => (
+                  {unscheduledActive.map((room) => (
                     <Link
                       key={room.roomId}
                       href={`/room/${room.roomId}`}
                       className="flex items-center justify-between text-xs text-text hover:text-accent transition-colors group"
                     >
                       <span className="truncate">{room.title}</span>
-                      <ArrowRight size={11} className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <ArrowRight
+                        size={11}
+                        className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      />
                     </Link>
                   ))}
                 </div>
@@ -565,14 +620,13 @@ export default function SchedulePage() {
               <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by title, candidate, email or position..."
                 className="w-full bg-surface border border-border text-text text-sm rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-accent transition-colors placeholder:text-muted/60"
               />
             </div>
 
             {sortedRooms.length === 0 && scheduledRooms.length === 0 ? (
-              
               <div className="text-center py-20 bg-surface border border-border rounded-2xl">
                 <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <Calendar className="text-accent" size={28} />
@@ -582,7 +636,10 @@ export default function SchedulePage() {
                   Schedule your first interview to start managing candidates and dates.
                 </p>
                 <Button
-                  onClick={() => { setShowCreate(true); setCreateError('') }}
+                  onClick={() => {
+                    setShowCreate(true)
+                    setCreateError('')
+                  }}
                   variant="primary"
                   icon={<Plus size={15} />}
                 >
@@ -604,7 +661,7 @@ export default function SchedulePage() {
                       Upcoming ({upcomingRooms.length})
                     </h2>
                     <div className="space-y-3">
-                      {upcomingRooms.map(room => (
+                      {upcomingRooms.map((room) => (
                         <InterviewCard
                           key={room.roomId}
                           room={room}
@@ -626,7 +683,7 @@ export default function SchedulePage() {
                       Past Scheduled ({pastScheduledRooms.length})
                     </h2>
                     <div className="space-y-3">
-                      {pastScheduledRooms.map(room => (
+                      {pastScheduledRooms.map((room) => (
                         <InterviewCard
                           key={room.roomId}
                           room={room}
@@ -648,8 +705,20 @@ export default function SchedulePage() {
 
       {}
       {editRoom && editForm && (
-        <Dialog open={true} onClose={() => { setEditRoom(null); setEditForm(null) }} maxWidth="max-w-lg">
-          <DialogHeader onClose={() => { setEditRoom(null); setEditForm(null) }}>
+        <Dialog
+          open={true}
+          onClose={() => {
+            setEditRoom(null)
+            setEditForm(null)
+          }}
+          maxWidth="max-w-lg"
+        >
+          <DialogHeader
+            onClose={() => {
+              setEditRoom(null)
+              setEditForm(null)
+            }}
+          >
             <div>
               <h2 className="font-semibold text-text">Edit Interview</h2>
               <p className="text-xs text-muted mt-0.5">{editRoom.roomId}</p>
@@ -661,7 +730,7 @@ export default function SchedulePage() {
               <Input
                 label="Session Title"
                 value={editForm.title}
-                onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
               />
             </div>
 
@@ -669,23 +738,25 @@ export default function SchedulePage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted block mb-1.5">
-                  <Calendar size={11} className="inline mr-1" />Date
+                  <Calendar size={11} className="inline mr-1" />
+                  Date
                 </label>
                 <input
                   type="date"
                   value={editForm.scheduledDate}
-                  onChange={e => setEditForm({ ...editForm, scheduledDate: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, scheduledDate: e.target.value })}
                   className="w-full h-9 bg-surface border border-border text-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms]"
                 />
               </div>
               <div>
                 <label className="text-xs font-medium text-muted block mb-1.5">
-                  <Clock size={11} className="inline mr-1" />Time
+                  <Clock size={11} className="inline mr-1" />
+                  Time
                 </label>
                 <input
                   type="time"
                   value={editForm.scheduledTime}
-                  onChange={e => setEditForm({ ...editForm, scheduledTime: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, scheduledTime: e.target.value })}
                   className="w-full h-9 bg-surface border border-border text-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms]"
                 />
               </div>
@@ -694,29 +765,41 @@ export default function SchedulePage() {
             {}
             <div>
               <label className="text-xs font-medium text-muted block mb-1.5">
-                Duration: <span className="text-accent font-semibold">{editForm.durationMinutes} min</span>
+                Duration:{' '}
+                <span className="text-accent font-semibold">{editForm.durationMinutes} min</span>
               </label>
               <input
                 type="range"
-                min={15} max={120} step={15}
+                min={15}
+                max={120}
+                step={15}
                 value={editForm.durationMinutes}
-                onChange={e => setEditForm({ ...editForm, durationMinutes: parseInt(e.target.value) })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, durationMinutes: parseInt(e.target.value) })
+                }
                 className="w-full accent-accent bg-surface-3 rounded-lg h-2 appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-xs text-muted mt-1 px-1">
-                <span>15m</span><span>30m</span><span>45m</span><span>60m</span><span>90m</span><span>120m</span>
+                <span>15m</span>
+                <span>30m</span>
+                <span>45m</span>
+                <span>60m</span>
+                <span>90m</span>
+                <span>120m</span>
               </div>
             </div>
 
             <div className="border-t border-border pt-4 space-y-4">
-              <p className="text-xs font-semibold text-muted uppercase tracking-wider">Candidate Information</p>
+              <p className="text-xs font-semibold text-muted uppercase tracking-wider">
+                Candidate Information
+              </p>
 
               {}
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   label="Name"
                   value={editForm.candidateName}
-                  onChange={e => setEditForm({ ...editForm, candidateName: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, candidateName: e.target.value })}
                   placeholder="Enter name"
                   iconLeft={<User size={12} />}
                 />
@@ -724,7 +807,7 @@ export default function SchedulePage() {
                   label="Email"
                   type="email"
                   value={editForm.candidateEmail}
-                  onChange={e => setEditForm({ ...editForm, candidateEmail: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, candidateEmail: e.target.value })}
                   placeholder="example@gmail.com"
                   iconLeft={<Mail size={12} />}
                 />
@@ -736,14 +819,14 @@ export default function SchedulePage() {
                   label="Phone"
                   type="tel"
                   value={editForm.candidatePhone}
-                  onChange={e => setEditForm({ ...editForm, candidatePhone: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, candidatePhone: e.target.value })}
                   placeholder="+91 XXXXX XXXXX"
                   iconLeft={<Phone size={12} />}
                 />
                 <Input
                   label="Position Applied"
                   value={editForm.candidatePosition}
-                  onChange={e => setEditForm({ ...editForm, candidatePosition: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, candidatePosition: e.target.value })}
                   placeholder="e.g. Frontend Engineer"
                   iconLeft={<Briefcase size={12} />}
                 />
@@ -755,17 +838,18 @@ export default function SchedulePage() {
                   label="LinkedIn / Portfolio"
                   type="url"
                   value={editForm.candidateLinkedin}
-                  onChange={e => setEditForm({ ...editForm, candidateLinkedin: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, candidateLinkedin: e.target.value })}
                   placeholder="https://linkedin.com/in/..."
                   iconLeft={<Link2 size={12} />}
                 />
                 <div>
                   <label className="text-xs font-medium text-muted block mb-1.5">
-                    <Star size={11} className="inline mr-1" />Experience Level
+                    <Star size={11} className="inline mr-1" />
+                    Experience Level
                   </label>
                   <select
                     value={editForm.experienceLevel}
-                    onChange={e => setEditForm({ ...editForm, experienceLevel: e.target.value })}
+                    onChange={(e) => setEditForm({ ...editForm, experienceLevel: e.target.value })}
                     className="w-full h-9 bg-surface border border-border text-text rounded-md px-3 text-sm focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms]"
                   >
                     <option value="">Select level</option>
@@ -781,12 +865,13 @@ export default function SchedulePage() {
               {}
               <div>
                 <label className="text-xs font-medium text-muted block mb-1.5">
-                  <FileText size={11} className="inline mr-1" />Notes / Details
+                  <FileText size={11} className="inline mr-1" />
+                  Notes / Details
                 </label>
                 <textarea
                   rows={3}
                   value={editForm.description}
-                  onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
                   placeholder="e.g. Senior Frontend Engineer, discuss system design..."
                   className="w-full bg-surface border border-border text-text rounded-md px-3 py-2 text-sm placeholder:text-subtle focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms] resize-none leading-relaxed"
                 />
@@ -802,7 +887,10 @@ export default function SchedulePage() {
           </DialogBody>
           <DialogFooter>
             <Button
-              onClick={() => { setEditRoom(null); setEditForm(null) }}
+              onClick={() => {
+                setEditRoom(null)
+                setEditForm(null)
+              }}
               variant="secondary"
             >
               Cancel
@@ -831,11 +919,7 @@ export default function SchedulePage() {
               This will permanently delete the scheduled interview and cannot be undone.
             </p>
             <div className="flex gap-3">
-              <Button
-                onClick={() => setDeleteRoomId(null)}
-                className="flex-1"
-                variant="secondary"
-              >
+              <Button onClick={() => setDeleteRoomId(null)} className="flex-1" variant="secondary">
                 Keep it
               </Button>
               <Button
@@ -857,7 +941,9 @@ export default function SchedulePage() {
           <DialogHeader onClose={() => setShowCreate(false)}>
             <div>
               <h2 className="font-semibold text-text">Schedule New Interview</h2>
-              <p className="text-xs text-muted mt-0.5">Fill in the candidate details and pick a time</p>
+              <p className="text-xs text-muted mt-0.5">
+                Fill in the candidate details and pick a time
+              </p>
             </div>
           </DialogHeader>
           <DialogBody className="space-y-5 max-h-[70vh] overflow-y-auto">
@@ -867,7 +953,7 @@ export default function SchedulePage() {
                 required
                 label="Session Title *"
                 value={createForm.title}
-                onChange={e => setCreateForm({ ...createForm, title: e.target.value })}
+                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
                 placeholder="e.g. Senior Frontend Engineer Round 2"
               />
             </div>
@@ -875,7 +961,8 @@ export default function SchedulePage() {
             {}
             <div>
               <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Calendar size={11} />Schedule
+                <Calendar size={11} />
+                Schedule
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -883,7 +970,9 @@ export default function SchedulePage() {
                   <input
                     type="date"
                     value={createForm.scheduledDate}
-                    onChange={e => setCreateForm({ ...createForm, scheduledDate: e.target.value })}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, scheduledDate: e.target.value })
+                    }
                     className="w-full h-9 bg-surface border border-border text-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms]"
                   />
                 </div>
@@ -892,7 +981,9 @@ export default function SchedulePage() {
                   <input
                     type="time"
                     value={createForm.scheduledTime}
-                    onChange={e => setCreateForm({ ...createForm, scheduledTime: e.target.value })}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, scheduledTime: e.target.value })
+                    }
                     className="w-full h-9 bg-surface border border-border text-text rounded-md px-3 py-2 text-sm focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms]"
                   />
                 </div>
@@ -902,31 +993,42 @@ export default function SchedulePage() {
             {}
             <div>
               <label className="text-xs font-medium text-muted block mb-1.5">
-                Duration: <span className="text-accent font-semibold">{createForm.durationMinutes} min</span>
+                Duration:{' '}
+                <span className="text-accent font-semibold">{createForm.durationMinutes} min</span>
               </label>
               <input
                 type="range"
-                min={15} max={120} step={15}
+                min={15}
+                max={120}
+                step={15}
                 value={createForm.durationMinutes}
-                onChange={e => setCreateForm({ ...createForm, durationMinutes: parseInt(e.target.value) })}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, durationMinutes: parseInt(e.target.value) })
+                }
                 className="w-full accent-accent bg-surface-3 rounded-lg h-2 appearance-none cursor-pointer"
               />
               <div className="flex justify-between text-xs text-muted mt-1 px-1">
-                <span>15m</span><span>30m</span><span>45m</span><span>60m</span><span>90m</span><span>120m</span>
+                <span>15m</span>
+                <span>30m</span>
+                <span>45m</span>
+                <span>60m</span>
+                <span>90m</span>
+                <span>120m</span>
               </div>
             </div>
 
             {}
             <div className="border-t border-border pt-4 space-y-4">
               <p className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
-                <User size={11} />Candidate Information
+                <User size={11} />
+                Candidate Information
               </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   label="Name"
                   value={createForm.candidateName}
-                  onChange={e => setCreateForm({ ...createForm, candidateName: e.target.value })}
+                  onChange={(e) => setCreateForm({ ...createForm, candidateName: e.target.value })}
                   placeholder="Enter candidate name"
                   iconLeft={<User size={12} />}
                 />
@@ -934,7 +1036,7 @@ export default function SchedulePage() {
                   label="Email"
                   type="email"
                   value={createForm.candidateEmail}
-                  onChange={e => setCreateForm({ ...createForm, candidateEmail: e.target.value })}
+                  onChange={(e) => setCreateForm({ ...createForm, candidateEmail: e.target.value })}
                   placeholder="example@gmail.com"
                   iconLeft={<Mail size={12} />}
                 />
@@ -945,14 +1047,16 @@ export default function SchedulePage() {
                   label="Phone"
                   type="tel"
                   value={createForm.candidatePhone}
-                  onChange={e => setCreateForm({ ...createForm, candidatePhone: e.target.value })}
+                  onChange={(e) => setCreateForm({ ...createForm, candidatePhone: e.target.value })}
                   placeholder="+91 XXXXX XXXXX"
                   iconLeft={<Phone size={12} />}
                 />
                 <Input
                   label="Position Applied"
                   value={createForm.candidatePosition}
-                  onChange={e => setCreateForm({ ...createForm, candidatePosition: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, candidatePosition: e.target.value })
+                  }
                   placeholder="e.g. Frontend Engineer"
                   iconLeft={<Briefcase size={12} />}
                 />
@@ -963,17 +1067,22 @@ export default function SchedulePage() {
                   label="LinkedIn / Portfolio"
                   type="url"
                   value={createForm.candidateLinkedin}
-                  onChange={e => setCreateForm({ ...createForm, candidateLinkedin: e.target.value })}
+                  onChange={(e) =>
+                    setCreateForm({ ...createForm, candidateLinkedin: e.target.value })
+                  }
                   placeholder="https://linkedin.com/in/..."
                   iconLeft={<Link2 size={12} />}
                 />
                 <div>
                   <label className="text-xs font-medium text-muted block mb-1.5">
-                    <Star size={11} className="inline mr-1" />Experience Level
+                    <Star size={11} className="inline mr-1" />
+                    Experience Level
                   </label>
                   <select
                     value={createForm.experienceLevel}
-                    onChange={e => setCreateForm({ ...createForm, experienceLevel: e.target.value })}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, experienceLevel: e.target.value })
+                    }
                     className="w-full h-9 bg-surface border border-border text-text rounded-md px-3 text-sm focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms]"
                   >
                     <option value="">Select level</option>
@@ -987,11 +1096,13 @@ export default function SchedulePage() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted block mb-1.5">Notes / Details</label>
+                <label className="text-xs font-medium text-muted block mb-1.5">
+                  Notes / Details
+                </label>
                 <textarea
                   rows={2}
                   value={createForm.description}
-                  onChange={e => setCreateForm({ ...createForm, description: e.target.value })}
+                  onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
                   placeholder="e.g. Discuss React performance and system design..."
                   className="w-full bg-surface border border-border text-text rounded-md px-3 py-2 text-sm placeholder:text-subtle focus:outline-none focus:border-accent focus:shadow-glow transition-colors duration-[120ms] resize-none leading-relaxed"
                 />
@@ -1002,7 +1113,7 @@ export default function SchedulePage() {
             <div className="border-t border-border pt-4">
               <Switch
                 checked={createForm.hintsEnabled}
-                onChange={v => setCreateForm({ ...createForm, hintsEnabled: v })}
+                onChange={(v) => setCreateForm({ ...createForm, hintsEnabled: v })}
                 label="AI Hints"
                 description="Allow candidate to request hints"
               />
@@ -1044,14 +1155,19 @@ export default function SchedulePage() {
             </div>
             <h2 className="text-xl font-bold text-text mb-1">Interview Scheduled!</h2>
             <p className="text-sm text-muted mb-6">
-              <span className="font-medium text-text">{createdInterview.title}</span> has been scheduled. Share the invite link with your candidate.
+              <span className="font-medium text-text">{createdInterview.title}</span> has been
+              scheduled. Share the invite link with your candidate.
             </p>
 
             {}
             <div className="bg-surface-2 border border-border rounded-xl p-4 mb-6 text-left">
-              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-2">Candidate Invite Link</p>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wide mb-2">
+                Candidate Invite Link
+              </p>
               <div className="flex items-center gap-2">
-                <p className="flex-1 text-xs text-text font-mono truncate">{createdInterview.inviteLink}</p>
+                <p className="flex-1 text-xs text-text font-mono truncate">
+                  {createdInterview.inviteLink}
+                </p>
                 <Button
                   onClick={copyCreatedInvite}
                   variant={copiedInvite ? 'success' : 'primary'}
@@ -1086,7 +1202,6 @@ export default function SchedulePage() {
   )
 }
 
-
 function InterviewCard({
   room,
   copiedId,
@@ -1102,36 +1217,46 @@ function InterviewCard({
   onDelete: (id: string) => void
   isUpcoming: boolean
 }) {
-  const statusColor = room.status === 'active'
-    ? 'text-success bg-success-soft border-success/25'
-    : room.status === 'ended'
-    ? 'text-muted bg-surface border-border'
-    : isUpcoming
-    ? 'text-accent bg-accent-soft border-accent/25'
-    : 'text-muted bg-surface border-border'
+  const statusColor =
+    room.status === 'active'
+      ? 'text-success bg-success-soft border-success/25'
+      : room.status === 'ended'
+        ? 'text-muted bg-surface border-border'
+        : isUpcoming
+          ? 'text-accent bg-accent-soft border-accent/25'
+          : 'text-muted bg-surface border-border'
 
-  const statusLabel = room.status === 'active'
-    ? 'Active'
-    : room.status === 'ended'
-    ? 'Ended'
-    : isUpcoming
-    ? 'Scheduled'
-    : 'Past'
+  const statusLabel =
+    room.status === 'active'
+      ? 'Active'
+      : room.status === 'ended'
+        ? 'Ended'
+        : isUpcoming
+          ? 'Scheduled'
+          : 'Past'
 
   return (
-    <div className={`bg-surface border rounded-xl p-5 transition-all hover:shadow-sm ${
-      isUpcoming ? 'border-border hover:border-accent/40' : 'border-border opacity-75 hover:opacity-100'
-    }`}>
+    <div
+      className={`bg-surface border rounded-xl p-5 transition-all hover:shadow-sm ${
+        isUpcoming
+          ? 'border-border hover:border-accent/40'
+          : 'border-border opacity-75 hover:opacity-100'
+      }`}
+    >
       <div className="flex items-start gap-4">
         {}
         {room.scheduledAt && (
-          <div className={`flex-shrink-0 w-14 text-center rounded-xl py-2 border ${
-            isUpcoming ? 'bg-accent-soft border-accent/25' : 'bg-surface border-border'
-          }`}>
+          <div
+            className={`flex-shrink-0 w-14 text-center rounded-xl py-2 border ${
+              isUpcoming ? 'bg-accent-soft border-accent/25' : 'bg-surface border-border'
+            }`}
+          >
             <div className={`text-xs font-medium ${isUpcoming ? 'text-accent' : 'text-muted'}`}>
               {new Date(room.scheduledAt).toLocaleDateString('en-US', { month: 'short' })}
             </div>
-            <div className={`text-xl font-bold leading-none mt-0.5 ${isUpcoming ? 'text-accent' : 'text-muted'}`}>
+            <div
+              className={`text-xl font-bold leading-none mt-0.5 ${isUpcoming ? 'text-accent' : 'text-muted'}`}
+            >
               {new Date(room.scheduledAt).getDate()}
             </div>
           </div>
@@ -1141,13 +1266,17 @@ function InterviewCard({
           {}
           <div className="flex items-center gap-2 mb-1.5 flex-wrap">
             <h3 className="font-semibold text-text text-sm truncate">{room.title}</h3>
-            <span className={`text-[10px] font-medium border rounded-full px-2 py-0.5 flex-shrink-0 ${statusColor}`}>
+            <span
+              className={`text-[10px] font-medium border rounded-full px-2 py-0.5 flex-shrink-0 ${statusColor}`}
+            >
               {statusLabel}
             </span>
             {room.experienceLevel && (
-              <span className={`text-[10px] font-medium border rounded-full px-2 py-0.5 flex-shrink-0 ${
-                (EXP_COLORS as any)[room.experienceLevel] || 'text-muted bg-surface border-border'
-              }`}>
+              <span
+                className={`text-[10px] font-medium border rounded-full px-2 py-0.5 flex-shrink-0 ${
+                  (EXP_COLORS as any)[room.experienceLevel] || 'text-muted bg-surface border-border'
+                }`}
+              >
                 {(EXP_LABELS as any)[room.experienceLevel]}
               </span>
             )}
@@ -1201,7 +1330,7 @@ function InterviewCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 text-xs text-accent hover:underline"
-                onClick={e => e.stopPropagation()}
+                onClick={(e) => e.stopPropagation()}
               >
                 <ExternalLink size={11} />
                 Profile
@@ -1235,7 +1364,13 @@ function InterviewCard({
                 onClick={() => onCopyInvite(room.roomId)}
                 title="Copy invite link"
                 className="h-8 w-8 p-0"
-                icon={copiedId === room.roomId ? <Check size={14} className="text-success" /> : <Copy size={14} />}
+                icon={
+                  copiedId === room.roomId ? (
+                    <Check size={14} className="text-success" />
+                  ) : (
+                    <Copy size={14} />
+                  )
+                }
               />
               <Button
                 variant="ghost"

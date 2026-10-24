@@ -4,7 +4,8 @@ import { Providers } from './providers'
 
 export const metadata: Metadata = {
   title: 'CodeNest — Live Coding Interview Platform',
-  description: 'Role-based live coding interviews with real-time collaboration, AI hints, test execution, and session replay.',
+  description:
+    'Role-based live coding interviews with real-time collaboration, AI hints, test execution, and session replay.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

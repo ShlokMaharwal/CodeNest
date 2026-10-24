@@ -1,8 +1,7 @@
 'use client'
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, XCircle, Info, X } from 'lucide-react'
-import { cn } from '@/lib/cn'
+import { AnimatePresence, motion } from 'framer-motion'
+import { CheckCircle2, Info, X, XCircle } from 'lucide-react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
 
 type ToastVariant = 'success' | 'error' | 'info'
 
@@ -24,8 +23,8 @@ export function useToast() {
 
 const icons: Record<ToastVariant, React.ReactNode> = {
   success: <CheckCircle2 size={15} className="text-success flex-shrink-0" />,
-  error:   <XCircle     size={15} className="text-danger  flex-shrink-0" />,
-  info:    <Info        size={15} className="text-accent  flex-shrink-0" />,
+  error: <XCircle size={15} className="text-danger  flex-shrink-0" />,
+  info: <Info size={15} className="text-accent  flex-shrink-0" />,
 }
 
 function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
@@ -48,7 +47,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     <motion.div
       layout
       initial={{ opacity: 0, y: 16, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0,  scale: 1 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 8, scale: 0.96 }}
       transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
       onMouseEnter={pauseTimer}
@@ -68,21 +67,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
 
   const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
+    setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
   const toast = useCallback((message: string, variant: ToastVariant = 'info') => {
     const id = Math.random().toString(36).slice(2)
-    setToasts(prev => [...prev, { id, message, variant }])
+    setToasts((prev) => [...prev, { id, message, variant }])
   }, [])
 
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
       {}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 items-end" aria-live="polite">
+      <div
+        className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 items-end"
+        aria-live="polite"
+      >
         <AnimatePresence mode="popLayout">
-          {toasts.map(t => (
+          {toasts.map((t) => (
             <ToastItem key={t.id} toast={t} onRemove={removeToast} />
           ))}
         </AnimatePresence>

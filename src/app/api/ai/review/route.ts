@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { callGemini, buildReviewPrompt } from '@/lib/gemini'
-import { connectDB } from '@/lib/mongodb'
+import { buildReviewPrompt, callGemini } from '@/lib/gemini'
 import { SnapshotModel } from '@/lib/models/Snapshot'
+import { connectDB } from '@/lib/mongodb'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +21,13 @@ export async function POST(req: NextRequest) {
       testResults = [],
     } = await req.json()
 
-    const prompt = buildReviewPrompt({ problemTitle, problemDescription, code, language, testResults })
+    const prompt = buildReviewPrompt({
+      problemTitle,
+      problemDescription,
+      code,
+      language,
+      testResults,
+    })
     const review = await callGemini(prompt)
 
     if (roomId) {
@@ -30,7 +36,7 @@ export async function POST(req: NextRequest) {
         await SnapshotModel.findOneAndUpdate(
           { roomId },
           { $set: { aiReview: review } },
-          { sort: { timestamp: -1 } }
+          { sort: { timestamp: -1 } },
         )
       } catch (e: any) {
         console.error('[POST /api/ai/review] Failed to persist aiReview to snapshot:', e.message)
@@ -40,6 +46,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ review })
   } catch (err: any) {
     console.error('[POST /api/ai/review]', err)
-    return NextResponse.json({ error: 'Failed to generate review. Please try again.' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to generate review. Please try again.' },
+      { status: 500 },
+    )
   }
 }

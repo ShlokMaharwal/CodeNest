@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { connectDB } from '@/lib/mongodb'
-import { RoomModel } from '@/lib/models/Room'
 import { signInviteToken } from '@/lib/invite'
+import { RoomModel } from '@/lib/models/Room'
+import { connectDB } from '@/lib/mongodb'
 import { setJSON } from '@/lib/redis'
 import { LiveRoomState } from '@/types'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 function generateRoomId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
       const schedDate = new Date(scheduledAt)
       const diffMs = schedDate.getTime() - now.getTime()
       if (diffMs > 0) {
-        redisTTL = Math.ceil(diffMs / 1000) + (48 * 60 * 60)
+        redisTTL = Math.ceil(diffMs / 1000) + 48 * 60 * 60
       }
     }
 
@@ -102,19 +102,22 @@ export async function POST(req: NextRequest) {
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const inviteLink = `${baseUrl}/room/${roomId}?token=${inviteToken}`
 
-    return NextResponse.json({
-      roomId: room.roomId,
-      title: room.title,
-      inviteLink,
-      inviteToken,
-    }, { status: 201 })
+    return NextResponse.json(
+      {
+        roomId: room.roomId,
+        title: room.title,
+        inviteLink,
+        inviteToken,
+      },
+      { status: 201 },
+    )
   } catch (err: any) {
     console.error('[POST /api/rooms]', err)
     return NextResponse.json({ error: 'Failed to create room' }, { status: 500 })
   }
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {

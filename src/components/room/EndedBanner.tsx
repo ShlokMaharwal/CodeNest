@@ -1,5 +1,5 @@
 'use client'
-import { StopCircle, ExternalLink } from 'lucide-react'
+import { ExternalLink, StopCircle } from 'lucide-react'
 import Link from 'next/link'
 
 interface EndedBannerProps {

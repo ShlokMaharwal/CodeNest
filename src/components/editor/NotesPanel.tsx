@@ -1,6 +1,6 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
 import { FileText } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 interface NotesPanelProps {
   notes: string
@@ -38,11 +38,13 @@ export function NotesPanel({ notes, onChange, readOnly = false }: NotesPanelProp
         <div className="flex items-center gap-1.5">
           {saving ? (
             <span className="text-[10px] text-muted flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-warning animate-pulse" />Saving…
+              <span className="w-1 h-1 rounded-full bg-warning animate-pulse" />
+              Saving…
             </span>
           ) : (
             <span className="text-[10px] text-subtle flex items-center gap-1">
-              <span className="w-1 h-1 rounded-full bg-success" />Saved
+              <span className="w-1 h-1 rounded-full bg-success" />
+              Saved
             </span>
           )}
         </div>
@@ -52,9 +54,13 @@ export function NotesPanel({ notes, onChange, readOnly = false }: NotesPanelProp
       <div className="flex-1 flex flex-col overflow-hidden">
         <textarea
           value={notes}
-          onChange={e => handleChange(e.target.value)}
+          onChange={(e) => handleChange(e.target.value)}
           readOnly={readOnly}
-          placeholder={readOnly ? 'Notes will appear here…' : 'Type notes here… (Markdown supported)\n\n# Observations\n- …\n\n# Follow-up questions\n- …'}
+          placeholder={
+            readOnly
+              ? 'Notes will appear here…'
+              : 'Type notes here… (Markdown supported)\n\n# Observations\n- …\n\n# Follow-up questions\n- …'
+          }
           className="flex-1 w-full bg-transparent text-sm font-mono text-text placeholder:text-subtle resize-none p-3 focus:outline-none leading-relaxed"
         />
       </div>

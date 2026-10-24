@@ -12,46 +12,49 @@ const Redis = require('ioredis')
 const mongoose = require('mongoose')
 
 const RoomSchema = new mongoose.Schema({
-  roomId:            { type: String, required: true, unique: true },
-  title:             { type: String, required: true, default: 'Interview Session' },
-  createdBy:         { type: String, required: true },
-  status:            { type: String, enum: ['waiting', 'active', 'ended'], default: 'waiting' },
-  language:          { type: String, default: 'javascript' },
-  problemId:         { type: mongoose.Schema.Types.ObjectId, ref: 'Problem', required: false },
-  hintsEnabled:      { type: Boolean, default: true },
-  maxHints:          { type: Number, default: 5 },
-  durationMinutes:   { type: Number, default: 45 },
-  inviteToken:       { type: String, required: true },
-  candidateName:     { type: String },
-  candidateEmail:    { type: String },
-  candidatePhone:    { type: String },
+  roomId: { type: String, required: true, unique: true },
+  title: { type: String, required: true, default: 'Interview Session' },
+  createdBy: { type: String, required: true },
+  status: { type: String, enum: ['waiting', 'active', 'ended'], default: 'waiting' },
+  language: { type: String, default: 'javascript' },
+  problemId: { type: mongoose.Schema.Types.ObjectId, ref: 'Problem', required: false },
+  hintsEnabled: { type: Boolean, default: true },
+  maxHints: { type: Number, default: 5 },
+  durationMinutes: { type: Number, default: 45 },
+  inviteToken: { type: String, required: true },
+  candidateName: { type: String },
+  candidateEmail: { type: String },
+  candidatePhone: { type: String },
   candidatePosition: { type: String },
   candidateLinkedin: { type: String },
-  experienceLevel:   { type: String, enum: ['junior', 'mid', 'senior', 'staff', 'principal'] },
-  description:       { type: String },
-  scheduledAt:       { type: Date },
-  createdAt:         { type: Date, default: Date.now },
-  expiresAt:         { type: Date, required: true },
-  endedAt:           { type: Date },
+  experienceLevel: { type: String, enum: ['junior', 'mid', 'senior', 'staff', 'principal'] },
+  description: { type: String },
+  scheduledAt: { type: Date },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true },
+  endedAt: { type: Date },
 })
 RoomSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
 const RoomModel = mongoose.models.Room || mongoose.model('Room', RoomSchema)
 
-const TestResultSchema = new mongoose.Schema({
-  input:    { type: String, default: '' },
-  expected: { type: String, default: '' },
-  actual:   { type: String, default: '' },
-  passed:   { type: Boolean, default: false },
-}, { _id: false })
+const TestResultSchema = new mongoose.Schema(
+  {
+    input: { type: String, default: '' },
+    expected: { type: String, default: '' },
+    actual: { type: String, default: '' },
+    passed: { type: Boolean, default: false },
+  },
+  { _id: false },
+)
 const SnapshotSchema = new mongoose.Schema({
-  roomId:      { type: String, required: true, index: true },
-  code:        { type: String, default: '' },
-  language:    { type: String, default: 'javascript' },
-  hintsUsed:   { type: Number, default: 0 },
+  roomId: { type: String, required: true, index: true },
+  code: { type: String, default: '' },
+  language: { type: String, default: 'javascript' },
+  hintsUsed: { type: Number, default: 0 },
   testResults: [TestResultSchema],
-  aiReview:    { type: String },
-  timestamp:   { type: Date, default: Date.now },
-  trigger:     { type: String, enum: ['auto', 'execution', 'manual', 'end'], default: 'auto' },
+  aiReview: { type: String },
+  timestamp: { type: Date, default: Date.now },
+  trigger: { type: String, enum: ['auto', 'execution', 'manual', 'end'], default: 'auto' },
 })
 const SnapshotModel = mongoose.models.Snapshot || mongoose.model('Snapshot', SnapshotSchema)
 
@@ -86,10 +89,10 @@ async function saveSnapshot(roomId, state, trigger) {
     // Extract test results from the last execution output
     const rawTestCases = state.output?.testCases || []
     const testResults = rawTestCases.map((tc) => ({
-      input:    tc.input    || '',
+      input: tc.input || '',
       expected: tc.expectedOutput || '',
-      actual:   tc.actualOutput  || '',
-      passed:   tc.passed        || false,
+      actual: tc.actualOutput || '',
+      passed: tc.passed || false,
     }))
 
     // Sum hint usage across all candidates (hintsUsed is not a top-level field in Redis state)
@@ -98,11 +101,11 @@ async function saveSnapshot(roomId, state, trigger) {
 
     await SnapshotModel.create({
       roomId,
-      code:        state.code     || '',
-      language:    state.language || 'javascript',
+      code: state.code || '',
+      language: state.language || 'javascript',
       hintsUsed,
       testResults,
-      timestamp:   new Date(),
+      timestamp: new Date(),
       trigger,
     })
   } catch (err) {
@@ -112,7 +115,7 @@ async function saveSnapshot(roomId, state, trigger) {
 
 const snapshotIntervals = new Map()
 
-function startAutoSnapshot(roomId, io) {
+function startAutoSnapshot(roomId, _io) {
   if (snapshotIntervals.has(roomId)) return
   const interval = setInterval(async () => {
     const state = await getRoomState(roomId)
@@ -155,7 +158,7 @@ app.prepare().then(async () => {
         (socket.handshake.headers.cookie || '')
           .split(';')
           .filter(Boolean)
-          .map((c) => c.trim().split('=').map(decodeURIComponent))
+          .map((c) => c.trim().split('=').map(decodeURIComponent)),
       )
 
       const token = await getToken({
@@ -175,7 +178,7 @@ app.prepare().then(async () => {
       }
 
       next()
-    } catch (err) {
+    } catch (_err) {
       next(new Error('Auth error'))
     }
   })
@@ -258,12 +261,10 @@ app.prepare().then(async () => {
         socket.data.roomId = roomId
         socket.data.role = role
 
-        const myHintsUsed  = role === 'candidate'
-          ? ((state.hintsPerCandidate || {})[user.email] || 0)
-          : 0
-        const myHintTexts  = role === 'candidate'
-          ? ((state.hintsTextPerCandidate || {})[user.email] || [])
-          : []
+        const myHintsUsed =
+          role === 'candidate' ? (state.hintsPerCandidate || {})[user.email] || 0 : 0
+        const myHintTexts =
+          role === 'candidate' ? (state.hintsTextPerCandidate || {})[user.email] || [] : []
         socket.emit('room-state', { ...state, myRole: role, hintsUsed: myHintsUsed, myHintTexts })
 
         socket.to(roomId).emit('user-joined', {
@@ -395,8 +396,8 @@ app.prepare().then(async () => {
 
       await setRoomState(roomId, state)
 
-      const personalCount = email ? (state.hintsPerCandidate[email] || 0) : 0
-      const personalHints  = email ? (state.hintsTextPerCandidate?.[email] || []) : []
+      const personalCount = email ? state.hintsPerCandidate[email] || 0 : 0
+      const personalHints = email ? state.hintsTextPerCandidate?.[email] || [] : []
       socket.emit('hint-count-update', { hintsUsed: personalCount })
       socket.emit('hints-text-update', { hints: personalHints })
     })
@@ -443,7 +444,10 @@ app.prepare().then(async () => {
 
         // Extend TTL so the room is preserved for 90 days after ending
         const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-        await RoomModel.findOneAndUpdate({ roomId }, { status: 'ended', endedAt: new Date(), expiresAt })
+        await RoomModel.findOneAndUpdate(
+          { roomId },
+          { status: 'ended', endedAt: new Date(), expiresAt },
+        )
 
         stopAutoSnapshot(roomId)
 
@@ -481,7 +485,9 @@ app.prepare().then(async () => {
           stopAutoSnapshot(roomId)
         }
 
-        console.log(`[Room ${roomId}] ${socketUser?.name || 'Unknown'} left. Remaining: ${state.users.length}`)
+        console.log(
+          `[Room ${roomId}] ${socketUser?.name || 'Unknown'} left. Remaining: ${state.users.length}`,
+        )
       } catch (err) {
         console.error('[disconnect] Error:', err)
       }
