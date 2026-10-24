@@ -52,3 +52,15 @@ it('does not grade upstream failures as wrong answers', async () => {
     gradeSolution('code', 'python', [{ input: '1', expectedOutput: '2', isHidden: true }]),
   ).rejects.toThrow('unavailable')
 })
+
+it('rejects oversized problem configurations instead of reporting a partial grade', async () => {
+  vi.mocked(executeCode).mockClear()
+  await expect(
+    gradeSolution(
+      'code',
+      'python',
+      Array(21).fill({ input: '1', expectedOutput: '2', isHidden: false }),
+    ),
+  ).rejects.toThrow('20 case')
+  expect(executeCode).not.toHaveBeenCalled()
+})
