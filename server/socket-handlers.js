@@ -1,3 +1,4 @@
+const { roomTTL, restoreRoomState, createRoomQueue } = require('./room-state')
 const { validateSocketInput } = require('./socket-schemas')
 const mongoose = require('mongoose')
 const { consumeRateLimit } = require('./rate-limit')
@@ -7,13 +8,16 @@ const { authorizeEvent } = require('./socket-policy')
 
 function registerSocketHandlers(io, dependencies) {
   const { redis, RoomModel, SnapshotModel, env } = dependencies
+  const queue = createRoomQueue()
   async function getRoomState(roomId) {
     const raw = await redis.get(`room:${roomId}`)
     return raw ? JSON.parse(raw) : null
   }
 
   async function setRoomState(roomId, state) {
-    await redis.setex(`room:${roomId}`, 7 * 24 * 60 * 60, JSON.stringify(state))
+    const key = 'room:' + roomId
+    const ttl = roomTTL(state, await redis.ttl(key))
+    await redis.setex(key, ttl, JSON.stringify(state))
   }
 
   async function saveSnapshot(roomId, state, trigger) {
@@ -75,49 +79,51 @@ function registerSocketHandlers(io, dependencies) {
     const { user } = socket.data
     function on(event, handler) {
       socket.on(event, async (payload) => {
-        try {
-          if (event !== 'disconnect') {
-            if (!validateSocketInput(event, payload).success) {
-              socket.emit('error', { message: 'Invalid event data' })
-              return
-            }
-            if (
-              !payload ||
-              typeof payload.roomId !== 'string' ||
-              !/^[a-z0-9]{8}$/.test(payload.roomId)
-            ) {
-              socket.emit('error', { message: 'Invalid room' })
-              return
-            }
-            if (event !== 'join-room') {
+        await queue.run(payload?.roomId || socket.data.roomId || socket.id, async () => {
+          try {
+            if (event !== 'disconnect') {
+              if (!validateSocketInput(event, payload).success) {
+                socket.emit('error', { message: 'Invalid event data' })
+                return
+              }
               if (
-                event === 'code-change' &&
-                (typeof payload.code !== 'string' ||
-                  Buffer.byteLength(payload.code) > 100000 ||
-                  !(
-                    await consumeRateLimit(
-                      redis,
-                      'ratelimit:socket:' + payload.roomId + ':' + user.email,
-                      50,
-                      1,
-                    )
-                  ).allowed)
+                !payload ||
+                typeof payload.roomId !== 'string' ||
+                !/^[a-z0-9]{8}$/.test(payload.roomId)
               ) {
-                socket.emit('error', { message: 'Code update limit exceeded' })
+                socket.emit('error', { message: 'Invalid room' })
                 return
               }
-              const state = await getRoomState(payload.roomId)
-              if (!authorizeEvent(socket, event, payload, state)) {
-                socket.emit('error', { message: 'Forbidden' })
-                return
+              if (event !== 'join-room') {
+                if (
+                  event === 'code-change' &&
+                  (typeof payload.code !== 'string' ||
+                    Buffer.byteLength(payload.code) > 100000 ||
+                    !(
+                      await consumeRateLimit(
+                        redis,
+                        'ratelimit:socket:' + payload.roomId + ':' + user.email,
+                        50,
+                        1,
+                      )
+                    ).allowed)
+                ) {
+                  socket.emit('error', { message: 'Code update limit exceeded' })
+                  return
+                }
+                const state = await getRoomState(payload.roomId)
+                if (!authorizeEvent(socket, event, payload, state)) {
+                  socket.emit('error', { message: 'Forbidden' })
+                  return
+                }
               }
             }
+            await handler(payload)
+          } catch (error) {
+            console.error('[Socket event]', event, error.message)
+            socket.emit('error', { message: 'Unable to process room event' })
           }
-          await handler(payload)
-        } catch (error) {
-          console.error('[Socket event]', event, error.message)
-          socket.emit('error', { message: 'Unable to process room event' })
-        }
+        })
       })
     }
     console.log(`[Socket] Connected: ${socket.id} (${user?.name})`)
@@ -177,6 +183,7 @@ function registerSocketHandlers(io, dependencies) {
           return
         }
 
+        state = restoreRoomState(state, role, socket.id)
         state.users = existingUsers.filter((u) => u.email !== user.email)
 
         const activeUser = {
@@ -214,6 +221,19 @@ function registerSocketHandlers(io, dependencies) {
           myHintTexts: personal.texts,
         })
 
+        if (state.problemId) {
+          const problem = await RoomModel.db
+            .collection('problems')
+            .findOne({ _id: new mongoose.Types.ObjectId(state.problemId) })
+          if (problem)
+            socket.emit('problem-updated', {
+              problem: {
+                ...problem,
+                testCases: (problem.testCases || []).filter((test) => !test.isHidden),
+              },
+              code: state.code,
+            })
+        }
         socket.to(roomId).emit('user-joined', {
           user: activeUser,
           users: state.users,
@@ -387,6 +407,7 @@ function registerSocketHandlers(io, dependencies) {
           (await RoomModel.findOne({ roomId })).inviteToken,
           env.INVITE_TOKEN_SECRET,
         )
+        state.endedAtMs = Date.now()
         state.status = 'ended'
         await setRoomState(roomId, state)
 
