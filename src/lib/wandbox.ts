@@ -1,11 +1,9 @@
-import { executionInput } from '../../server/execution-input'
+import { z } from 'zod'
 import { ExecutionResult, TestCase } from '@/types'
+import { executionInput } from '../../server/execution-input'
 
 const WANDBOX_URL = 'https://wandbox.org/api/compile.json'
-const TIMEOUT_MS = 10_000
-const RETRY_DELAY_MS = 1_000
-
-const WANDBOX_COMPILER: Record<string, string> = {
+const COMPILERS: Record<string, string> = {
   javascript: 'nodejs-20.17.0',
   typescript: 'typescript-5.6.2',
   python: 'cpython-3.12.7',
@@ -15,151 +13,192 @@ const WANDBOX_COMPILER: Record<string, string> = {
   go: 'go-1.23.2',
   rust: 'rust-1.82.0',
 }
-
-async function fetchWithTimeout(
-  url: string,
-  init: RequestInit,
-  timeout: number,
-): Promise<Response> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), timeout)
-  try {
-    return await fetch(url, { ...init, signal: controller.signal })
-  } finally {
-    clearTimeout(timer)
+const responseSchema = z
+  .object({
+    status: z.union([z.string(), z.number()]).optional(),
+    program_output: z.string().max(256000).optional(),
+    program_error: z.string().max(256000).optional(),
+    compiler_error: z.string().max(256000).optional(),
+  })
+  .refine(
+    (value) => value.status !== undefined || value.compiler_error !== undefined,
+    'Missing execution status',
+  )
+export class ExecutionError extends Error {
+  constructor(
+    public code: string,
+    message: string,
+    public retryable = false,
+  ) {
+    super(message)
   }
 }
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-async function runCode(
-  code: string,
-  language: string,
-  stdin: string = '',
-  attempt = 1,
-): Promise<{ stdout: string; stderr: string; code: number }> {
-  const compiler = WANDBOX_COMPILER[language] || WANDBOX_COMPILER['javascript']
-
-  let response: Response
-  try {
-    response = await fetchWithTimeout(
-      WANDBOX_URL,
-      {
+async function runCode(code: string, language: string, stdin: string, deadline: number) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const remaining = deadline - Date.now()
+    if (remaining <= 0)
+      throw new ExecutionError('TIMEOUT', 'Execution timed out. Try simplifying your code.')
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), Math.min(10000, remaining))
+    let failure: ExecutionError
+    try {
+      const response = await fetch(WANDBOX_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, compiler, stdin }),
-      },
-      TIMEOUT_MS,
-    )
-  } catch (err: any) {
-    if (err.name === 'AbortError') {
-      throw new Error('Execution timed out. Try simplifying your code.')
+        body: JSON.stringify({ code, compiler: COMPILERS[language], stdin }),
+        signal: controller.signal,
+      })
+      if (response.status === 429)
+        throw new ExecutionError('RATE_LIMITED', 'Too many requests. Wait a moment and try again.')
+      if (!response.ok)
+        throw new ExecutionError(
+          'UPSTREAM_UNAVAILABLE',
+          'Execution server is temporarily unavailable.',
+          response.status >= 500,
+        )
+      const reader = response.body?.getReader()
+      if (!reader)
+        throw new ExecutionError(
+          'UPSTREAM_RESPONSE',
+          'Execution server returned an invalid response.',
+        )
+      const chunks: Uint8Array[] = []
+      let size = 0
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          size += value.byteLength
+          if (size > 1000000) {
+            await reader.cancel()
+            throw new ExecutionError('OUTPUT_LIMIT', 'Execution output exceeded the size limit.')
+          }
+          chunks.push(value)
+        }
+      } finally {
+        reader.releaseLock()
+      }
+      const parsed = responseSchema.safeParse(JSON.parse(Buffer.concat(chunks).toString('utf8')))
+      if (!parsed.success)
+        throw new ExecutionError(
+          'UPSTREAM_RESPONSE',
+          'Execution server returned an invalid response.',
+        )
+      const data = parsed.data
+      return {
+        stdout: data.program_output || '',
+        stderr: data.compiler_error || data.program_error || '',
+        code: String(data.status) === '0' && !data.compiler_error ? 0 : 1,
+      }
+    } catch (error) {
+      failure =
+        error instanceof ExecutionError
+          ? error
+          : error instanceof Error && error.name === 'AbortError'
+            ? new ExecutionError('TIMEOUT', 'Execution timed out. Try simplifying your code.', true)
+            : error instanceof SyntaxError
+              ? new ExecutionError(
+                  'UPSTREAM_RESPONSE',
+                  'Execution server returned an invalid response.',
+                )
+              : new ExecutionError(
+                  'UPSTREAM_UNAVAILABLE',
+                  'Could not reach execution server. Try again later.',
+                  true,
+                )
+    } finally {
+      clearTimeout(timer)
     }
-    throw new Error('Could not reach execution server. Check your connection.')
+    if (!failure.retryable || attempt === 2 || Date.now() >= deadline) throw failure
+    await delay(Math.min(250 * 2 ** attempt, Math.max(0, deadline - Date.now())))
   }
-
-  if (response.status === 429) {
-    throw new Error('Too many requests. Wait a moment and try again.')
-  }
-
-  if (response.status >= 500 && attempt === 1) {
-    await new Promise((r) => setTimeout(r, RETRY_DELAY_MS))
-    return runCode(code, language, stdin, 2)
-  }
-
-  if (!response.ok) {
-    throw new Error(`Execution API error: ${response.status}`)
-  }
-
-  const data = await response.json()
-  const stdout = data.program_output || ''
-  const stderr = data.compiler_error || data.program_error || ''
-  const exitCode = data.status === '0' ? 0 : 1
-
-  return { stdout, stderr, code: exitCode }
+  throw new ExecutionError('UPSTREAM_UNAVAILABLE', 'Execution unavailable')
 }
 
 export async function executeCode(
   code: string,
   language: string,
   testCases: TestCase[] = [],
+  grade = false,
 ): Promise<ExecutionResult> {
+  const started = performance.now()
   try {
-    if (!executionInput.safeParse({ code, language, testCases }).success)
-      throw new Error('Invalid execution input or size limit exceeded')
-    const hasTestCases =
-      testCases.length > 0 && testCases.some((tc) => tc.input || tc.expectedOutput)
-
-    if (!hasTestCases) {
-      const result = await runCode(code, language)
+    const parsed = executionInput.safeParse({ code, language, testCases })
+    if (!parsed.success)
+      throw new ExecutionError('INVALID_INPUT', 'Invalid execution input or size limit exceeded')
+    const deadline = Date.now() + 20000
+    const hasCases = grade || testCases.some((test) => test.input || test.expectedOutput)
+    if (!hasCases) {
+      const result = await runCode(code, language, '', deadline)
       return {
         stdout: result.stdout || '(no output)',
         stderr: result.stderr || null,
         status: result.code === 0 ? 'Accepted' : 'Runtime Error',
-        time: '—',
+        time: (performance.now() - started).toFixed(0) + ' ms',
         memory: 0,
       }
     }
-
-    const results = await Promise.all(
-      testCases.map(async (tc) => {
-        const result = await runCode(code, language, tc.input)
-        const actual = result.stdout.trim()
-
-        if (!tc.expectedOutput || tc.expectedOutput.trim() === '') {
-          return {
-            ...tc,
-            actualOutput: actual,
-            passed: true,
-            isCustomInput: true,
-            stderr: result.stderr,
-          }
-        }
-
-        const expected = tc.expectedOutput.trim()
-        return {
-          ...tc,
-          actualOutput: actual,
-          passed: actual === expected,
-          isCustomInput: false,
-          stderr: result.stderr,
-        }
-      }),
-    )
-
-    const passedCount = results.filter((r) => r.passed && !r.isCustomInput).length
-    const totalWithExpectation = results.filter((r) => !r.isCustomInput).length
-    const allPassed = totalWithExpectation > 0 && passedCount === totalWithExpectation
-
-    let status = 'Execution Completed'
-    if (totalWithExpectation > 0) {
-      status = allPassed
-        ? 'All Tests Passed'
-        : `${passedCount}/${totalWithExpectation} Tests Passed`
+    const results: TestCase[] = []
+    // Bounded concurrency and a shared deadline cap provider load and total latency.
+    for (let offset = 0; offset < testCases.length; offset += 2) {
+      results.push(
+        ...(await Promise.all(
+          testCases.slice(offset, offset + 2).map(async (test) => {
+            const result = await runCode(code, language, test.input, deadline)
+            const actualOutput = result.stdout.trim()
+            const isCustomInput = !grade && !test.expectedOutput.trim()
+            return {
+              ...test,
+              actualOutput,
+              isCustomInput,
+              passed:
+                result.code === 0 && (isCustomInput || actualOutput === test.expectedOutput.trim()),
+              stderr: result.stderr,
+            }
+          }),
+        )),
+      )
     }
-
+    const graded = results.filter((test) => !test.isCustomInput)
+    const passed = graded.filter((test) => test.passed).length
     return {
       stdout: results
-        .map((r, i) => {
-          if (r.isCustomInput) {
-            return `Case ${i + 1} (Custom Input):\n  Output: ${r.actualOutput || '(no output)'}`
-          }
-          return r.passed
-            ? `Test ${i + 1}: ✅ Passed`
-            : `Test ${i + 1}: ❌ Failed\n  Expected: ${r.expectedOutput}\n  Got:      ${r.actualOutput}`
-        })
+        .map((test, index) =>
+          test.isCustomInput
+            ? 'Case ' +
+              (index + 1) +
+              ' (Custom Input):\n  Output: ' +
+              (test.actualOutput || '(no output)')
+            : test.passed
+              ? 'Test ' + (index + 1) + ': ✅ Passed'
+              : 'Test ' +
+                (index + 1) +
+                ': ❌ Failed\n  Expected: ' +
+                test.expectedOutput +
+                '\n  Got:      ' +
+                test.actualOutput,
+        )
         .join('\n\n'),
-      stderr: results.find((r) => r.stderr)?.stderr || null,
-      status,
-      time: '—',
+      stderr: results.find((test) => test.stderr)?.stderr || null,
+      status: graded.length
+        ? passed === graded.length
+          ? 'All Tests Passed'
+          : passed + '/' + graded.length + ' Tests Passed'
+        : 'Execution Completed',
+      time: (performance.now() - started).toFixed(0) + ' ms',
       memory: 0,
       testCases: results,
     }
-  } catch (error: any) {
+  } catch (error) {
     return {
       stdout: null,
-      stderr: error.message || 'Execution failed',
+      stderr: error instanceof Error ? error.message : 'Execution failed',
       status: 'Error',
-      time: '—',
+      time: (performance.now() - started).toFixed(0) + ' ms',
       memory: 0,
+      errorCode: error instanceof ExecutionError ? error.code : 'EXECUTION_FAILED',
     }
   }
 }
