@@ -29,8 +29,8 @@ A 2-person role-based coding interview platform. Interviewer watches. Candidate 
 ## Quick Start
 
 ```bash
-git clone https://github.com/your-username/codenest.git
-cd codenest
+git clone https://github.com/ShlokMaharwal/CodeNest.git
+cd CodeNest
 npm install
 cp .env.example .env    # fill in MONGODB_URI, NEXTAUTH_SECRET, REDIS_URL, INVITE_TOKEN_SECRET, GEMINI_API_KEY
 docker-compose up -d    # or use Upstash and set REDIS_URL
