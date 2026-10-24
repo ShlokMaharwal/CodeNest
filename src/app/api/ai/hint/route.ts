@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { callGemini, buildHintPrompt } from '@/lib/gemini'
+import { buildHintPrompt, callGemini } from '@/lib/gemini'
 import { incrementWithTTL } from '@/lib/redis'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,12 +39,15 @@ export async function POST(req: NextRequest) {
     if (err?.status === 429 || err?.message?.includes('429') || err?.message?.includes('quota')) {
       return NextResponse.json(
         { error: 'AI service is temporarily rate limited. Please wait a moment and try again.' },
-        { status: 503 }
+        { status: 503 },
       )
     }
     return NextResponse.json(
-      { error: 'AI service is currently experiencing high demand or is temporarily unavailable. Please try again in a few seconds.' },
-      { status: 503 }
+      {
+        error:
+          'AI service is currently experiencing high demand or is temporarily unavailable. Please try again in a few seconds.',
+      },
+      { status: 503 },
     )
   }
 }

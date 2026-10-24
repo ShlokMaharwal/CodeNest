@@ -1,7 +1,7 @@
 'use client'
-import { Crown, User } from 'lucide-react'
-import { ActiveUser } from '@/types'
 import { hashColor } from '@/components/common/Avatar'
+import { ActiveUser } from '@/types'
+import { Crown, User } from 'lucide-react'
 import { useState } from 'react'
 
 interface UserAvatarsProps {
@@ -12,11 +12,14 @@ interface UserAvatarsProps {
 export function UserAvatars({ users, currentUserId }: UserAvatarsProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const MAX_VISIBLE = 3
-  const visible  = users.slice(0, MAX_VISIBLE)
+  const visible = users.slice(0, MAX_VISIBLE)
   const overflow = users.length - MAX_VISIBLE
 
   return (
-    <div className="flex items-center" aria-label={`${users.length} user${users.length !== 1 ? 's' : ''} in session`}>
+    <div
+      className="flex items-center"
+      aria-label={`${users.length} user${users.length !== 1 ? 's' : ''} in session`}
+    >
       {visible.map((user, i) => (
         <div
           key={user.socketId}
@@ -38,7 +41,9 @@ export function UserAvatars({ users, currentUserId }: UserAvatarsProps) {
               <div className="flex items-center gap-1.5 font-medium">
                 {user.role === 'interviewer' ? <Crown size={10} /> : <User size={10} />}
                 {user.name}
-                {user.socketId === currentUserId && <span className="text-accent font-normal">(you)</span>}
+                {user.socketId === currentUserId && (
+                  <span className="text-accent font-normal">(you)</span>
+                )}
               </div>
               <div className="text-[10px] opacity-70 mt-0.5 capitalize">{user.role}</div>
             </div>
@@ -46,7 +51,10 @@ export function UserAvatars({ users, currentUserId }: UserAvatarsProps) {
         </div>
       ))}
       {overflow > 0 && (
-        <div className="w-7 h-7 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[10px] font-semibold text-muted ring-2 ring-bg" style={{ marginLeft: '-8px' }}>
+        <div
+          className="w-7 h-7 rounded-full bg-surface-2 border border-border flex items-center justify-center text-[10px] font-semibold text-muted ring-2 ring-bg"
+          style={{ marginLeft: '-8px' }}
+        >
           +{overflow}
         </div>
       )}

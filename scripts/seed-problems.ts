@@ -11,9 +11,18 @@ dotenv.config({ path: '.env' })
 const MONGODB_URI = process.env.MONGODB_URI!
 
 const ProblemSchema = new mongoose.Schema({
-  title: String, difficulty: String, tags: [String],
+  title: String,
+  difficulty: String,
+  tags: [String],
   description: String,
-  starterCode: { javascript: String, python: String, java: String, cpp: String, typescript: String, go: String },
+  starterCode: {
+    javascript: String,
+    python: String,
+    java: String,
+    cpp: String,
+    typescript: String,
+    go: String,
+  },
   testCases: [{ input: String, expectedOutput: String, isHidden: Boolean }],
   hints: [String],
   createdAt: { type: Date, default: Date.now },
@@ -51,7 +60,10 @@ Output: [0,1]
       { input: '[3,2,4]\n6', expectedOutput: '[1,2]', isHidden: false },
       { input: '[3,3]\n6', expectedOutput: '[0,1]', isHidden: true },
     ],
-    hints: ['Try using a hash map to store visited numbers.', 'For each number, check if target - number exists in the map.'],
+    hints: [
+      'Try using a hash map to store visited numbers.',
+      'For each number, check if target - number exists in the map.',
+    ],
   },
   {
     title: 'Contains Duplicate',
@@ -70,7 +82,10 @@ Output: [0,1]
       { input: '[1,2,3,1]', expectedOutput: 'true', isHidden: false },
       { input: '[1,2,3,4]', expectedOutput: 'false', isHidden: false },
     ],
-    hints: ['A Set only stores unique values.', 'Compare the size of the set to the original array length.'],
+    hints: [
+      'A Set only stores unique values.',
+      'Compare the size of the set to the original array length.',
+    ],
   },
   {
     title: 'Valid Anagram',
@@ -105,9 +120,16 @@ Output: [0,1]
       go: `package main\nimport "fmt"\nfunc groupAnagrams(strs []string) [][]string { return nil }\nfunc main() { fmt.Println(groupAnagrams([]string{"eat","tea","tan","ate","nat","bat"})) }`,
     },
     testCases: [
-      { input: '["eat","tea","tan","ate","nat","bat"]', expectedOutput: '[["eat","tea","ate"],["tan","nat"],["bat"]]', isHidden: false },
+      {
+        input: '["eat","tea","tan","ate","nat","bat"]',
+        expectedOutput: '[["eat","tea","ate"],["tan","nat"],["bat"]]',
+        isHidden: false,
+      },
     ],
-    hints: ['Sort each string as a hashmap key.', 'All strings that are anagrams will have the same sorted key.'],
+    hints: [
+      'Sort each string as a hashmap key.',
+      'All strings that are anagrams will have the same sorted key.',
+    ],
   },
   {
     title: 'Top K Frequent Elements',
@@ -147,7 +169,10 @@ Output: [0,1]
       { input: '"A man, a plan, a canal: Panama"', expectedOutput: 'true', isHidden: false },
       { input: '"race a car"', expectedOutput: 'false', isHidden: false },
     ],
-    hints: ['Use two pointers: one from start, one from end.', 'Skip non-alphanumeric characters and compare lowercase.'],
+    hints: [
+      'Use two pointers: one from start, one from end.',
+      'Skip non-alphanumeric characters and compare lowercase.',
+    ],
   },
   {
     title: 'Three Sum',
@@ -166,7 +191,10 @@ Output: [0,1]
       { input: '[-1,0,1,2,-1,-4]', expectedOutput: '[[-1,-1,2],[-1,0,1]]', isHidden: false },
       { input: '[0,0,0]', expectedOutput: '[[0,0,0]]', isHidden: false },
     ],
-    hints: ['Sort first, then use two pointers for the inner loop.', 'Skip duplicates carefully to avoid duplicate triplets.'],
+    hints: [
+      'Sort first, then use two pointers for the inner loop.',
+      'Skip duplicates carefully to avoid duplicate triplets.',
+    ],
   },
   {
     title: 'Container With Most Water',
@@ -181,10 +209,11 @@ Output: [0,1]
       typescript: `function maxArea(height: number[]): number { return 0; }`,
       go: `package main\nfunc maxArea(height []int) int { return 0 }`,
     },
-    testCases: [
-      { input: '[1,8,6,2,5,4,8,3,7]', expectedOutput: '49', isHidden: false },
+    testCases: [{ input: '[1,8,6,2,5,4,8,3,7]', expectedOutput: '49', isHidden: false }],
+    hints: [
+      'Start with the widest container (pointers at both ends).',
+      'Always move the pointer with the shorter height inward.',
     ],
-    hints: ['Start with the widest container (pointers at both ends).', 'Always move the pointer with the shorter height inward.'],
   },
   {
     title: 'Trapping Rain Water',
@@ -199,10 +228,11 @@ Output: [0,1]
       typescript: `function trap(height: number[]): number { return 0; }`,
       go: `package main\nfunc trap(height []int) int { return 0 }`,
     },
-    testCases: [
-      { input: '[0,1,0,2,1,0,1,3,2,1,2,1]', expectedOutput: '6', isHidden: false },
+    testCases: [{ input: '[0,1,0,2,1,0,1,3,2,1,2,1]', expectedOutput: '6', isHidden: false }],
+    hints: [
+      'Water at position i = min(maxLeft[i], maxRight[i]) - height[i].',
+      'Two pointer approach: track maxLeft and maxRight dynamically.',
     ],
-    hints: ['Water at position i = min(maxLeft[i], maxRight[i]) - height[i].', 'Two pointer approach: track maxLeft and maxRight dynamically.'],
   },
   {
     title: 'Move Zeroes',
@@ -217,10 +247,11 @@ Output: [0,1]
       typescript: `function moveZeroes(nums: number[]): void {}`,
       go: `package main\nfunc moveZeroes(nums []int) {}`,
     },
-    testCases: [
-      { input: '[0,1,0,3,12]', expectedOutput: '[1,3,12,0,0]', isHidden: false },
+    testCases: [{ input: '[0,1,0,3,12]', expectedOutput: '[1,3,12,0,0]', isHidden: false }],
+    hints: [
+      'Use a write pointer for non-zero elements.',
+      'After placing all non-zeroes, fill the rest with 0s.',
     ],
-    hints: ['Use a write pointer for non-zero elements.', 'After placing all non-zeroes, fill the rest with 0s.'],
   },
 
   // ── Sliding Window ────────────────────────────────────────────────────────
@@ -241,7 +272,10 @@ Output: [0,1]
       { input: '[7,1,5,3,6,4]', expectedOutput: '5', isHidden: false },
       { input: '[7,6,4,3,1]', expectedOutput: '0', isHidden: false },
     ],
-    hints: ['Track the minimum price seen so far.', 'At each step, compare current price minus min with the running max profit.'],
+    hints: [
+      'Track the minimum price seen so far.',
+      'At each step, compare current price minus min with the running max profit.',
+    ],
   },
   {
     title: 'Longest Substring Without Repeating Characters',
@@ -260,7 +294,10 @@ Output: [0,1]
       { input: '"abcabcbb"', expectedOutput: '3', isHidden: false },
       { input: '"bbbbb"', expectedOutput: '1', isHidden: false },
     ],
-    hints: ['Use a sliding window with a set/map.', 'Shrink the window from the left when a duplicate is found.'],
+    hints: [
+      'Use a sliding window with a set/map.',
+      'Shrink the window from the left when a duplicate is found.',
+    ],
   },
   {
     title: 'Minimum Window Substring',
@@ -275,10 +312,11 @@ Output: [0,1]
       typescript: `function minWindow(s: string, t: string): string { return ""; }`,
       go: `package main\nfunc minWindow(s string, t string) string { return "" }`,
     },
-    testCases: [
-      { input: '"ADOBECODEBANC"\n"ABC"', expectedOutput: '"BANC"', isHidden: false },
+    testCases: [{ input: '"ADOBECODEBANC"\n"ABC"', expectedOutput: '"BANC"', isHidden: false }],
+    hints: [
+      'Use two frequency maps: one for t, one for the current window.',
+      'Expand right, shrink left when the window is valid.',
     ],
-    hints: ['Use two frequency maps: one for t, one for the current window.', 'Expand right, shrink left when the window is valid.'],
   },
   {
     title: 'Longest Repeating Character Replacement',
@@ -293,10 +331,11 @@ Output: [0,1]
       typescript: `function characterReplacement(s: string, k: number): number { return 0; }`,
       go: `package main\nfunc characterReplacement(s string, k int) int { return 0 }`,
     },
-    testCases: [
-      { input: '"ABAB"\n2', expectedOutput: '4', isHidden: false },
+    testCases: [{ input: '"ABAB"\n2', expectedOutput: '4', isHidden: false }],
+    hints: [
+      'Window is valid when (windowSize - maxFreq) <= k.',
+      'Track the most frequent character count in the window.',
     ],
-    hints: ['Window is valid when (windowSize - maxFreq) <= k.', 'Track the most frequent character count in the window.'],
   },
   {
     title: 'Permutation in String',
@@ -315,7 +354,10 @@ Output: [0,1]
       { input: '"ab"\n"eidbaooo"', expectedOutput: 'true', isHidden: false },
       { input: '"ab"\n"eidboaoo"', expectedOutput: 'false', isHidden: false },
     ],
-    hints: ['Use a fixed-size window of length s1.length.', 'Compare frequency maps of the window and s1.'],
+    hints: [
+      'Use a fixed-size window of length s1.length.',
+      'Compare frequency maps of the window and s1.',
+    ],
   },
 
   // ── Stack ─────────────────────────────────────────────────────────────────
@@ -337,7 +379,10 @@ Output: [0,1]
       { input: '"(]"', expectedOutput: 'false', isHidden: false },
       { input: '"([)]"', expectedOutput: 'false', isHidden: true },
     ],
-    hints: ['Push opening brackets onto a stack.', 'When you see a closing bracket, check if it matches the top of the stack.'],
+    hints: [
+      'Push opening brackets onto a stack.',
+      'When you see a closing bracket, check if it matches the top of the stack.',
+    ],
   },
   {
     title: 'Min Stack',
@@ -353,7 +398,10 @@ Output: [0,1]
       go: `type MinStack struct{}\nfunc Constructor() MinStack { return MinStack{} }\nfunc (s *MinStack) Push(val int) {}\nfunc (s *MinStack) Pop() {}\nfunc (s *MinStack) Top() int { return 0 }\nfunc (s *MinStack) GetMin() int { return 0 }`,
     },
     testCases: [],
-    hints: ['Use a secondary stack to track minimums.', 'Only push to the min stack when the new value is <= current min.'],
+    hints: [
+      'Use a secondary stack to track minimums.',
+      'Only push to the min stack when the new value is <= current min.',
+    ],
   },
   {
     title: 'Evaluate Reverse Polish Notation',
@@ -372,7 +420,10 @@ Output: [0,1]
       { input: '["2","1","+","3","*"]', expectedOutput: '9', isHidden: false },
       { input: '["4","13","5","/","+"]', expectedOutput: '6', isHidden: false },
     ],
-    hints: ['Push numbers onto a stack.', 'When you see an operator, pop two numbers, compute, and push the result.'],
+    hints: [
+      'Push numbers onto a stack.',
+      'When you see an operator, pop two numbers, compute, and push the result.',
+    ],
   },
   {
     title: 'Generate Parentheses',
@@ -388,9 +439,16 @@ Output: [0,1]
       go: `package main\nfunc generateParenthesis(n int) []string { return nil }`,
     },
     testCases: [
-      { input: '3', expectedOutput: '["((()))","(()())","(())()","()(())","()()()"]', isHidden: false },
+      {
+        input: '3',
+        expectedOutput: '["((()))","(()())","(())()","()(())","()()()"]',
+        isHidden: false,
+      },
     ],
-    hints: ['Use recursion with open/close counters.', 'Add "(" if open < n, add ")" if close < open.'],
+    hints: [
+      'Use recursion with open/close counters.',
+      'Add "(" if open < n, add ")" if close < open.',
+    ],
   },
   {
     title: 'Daily Temperatures',
@@ -408,7 +466,10 @@ Output: [0,1]
     testCases: [
       { input: '[73,74,75,71,69,72,76,73]', expectedOutput: '[1,1,4,2,1,1,0,0]', isHidden: false },
     ],
-    hints: ['Use a monotonic decreasing stack of indices.', 'Pop when you find a temperature greater than the stack top.'],
+    hints: [
+      'Use a monotonic decreasing stack of indices.',
+      'Pop when you find a temperature greater than the stack top.',
+    ],
   },
 
   // ── Binary Search ─────────────────────────────────────────────────────────
@@ -429,7 +490,10 @@ Output: [0,1]
       { input: '[-1,0,3,5,9,12]\n9', expectedOutput: '4', isHidden: false },
       { input: '[-1,0,3,5,9,12]\n2', expectedOutput: '-1', isHidden: false },
     ],
-    hints: ['Initialize left=0, right=len-1.', 'Compare mid element with target, adjust left or right accordingly.'],
+    hints: [
+      'Initialize left=0, right=len-1.',
+      'Compare mid element with target, adjust left or right accordingly.',
+    ],
   },
   {
     title: 'Find Minimum in Rotated Sorted Array',
@@ -448,7 +512,10 @@ Output: [0,1]
       { input: '[3,4,5,1,2]', expectedOutput: '1', isHidden: false },
       { input: '[4,5,6,7,0,1,2]', expectedOutput: '0', isHidden: false },
     ],
-    hints: ['Compare nums[mid] with nums[right] to determine which half is sorted.', 'The minimum is in the unsorted half.'],
+    hints: [
+      'Compare nums[mid] with nums[right] to determine which half is sorted.',
+      'The minimum is in the unsorted half.',
+    ],
   },
   {
     title: 'Search in Rotated Sorted Array',
@@ -467,7 +534,10 @@ Output: [0,1]
       { input: '[4,5,6,7,0,1,2]\n0', expectedOutput: '4', isHidden: false },
       { input: '[4,5,6,7,0,1,2]\n3', expectedOutput: '-1', isHidden: false },
     ],
-    hints: ['One half is always sorted — determine which one.', 'Check if target is in the sorted half; if yes, search there, otherwise search the other.'],
+    hints: [
+      'One half is always sorted — determine which one.',
+      'Check if target is in the sorted half; if yes, search there, otherwise search the other.',
+    ],
   },
   {
     title: 'Koko Eating Bananas',
@@ -482,10 +552,11 @@ Output: [0,1]
       typescript: `function minEatingSpeed(piles: number[], h: number): number { return 0; }`,
       go: `package main\nfunc minEatingSpeed(piles []int, h int) int { return 0 }`,
     },
-    testCases: [
-      { input: '[3,6,7,11]\n8', expectedOutput: '4', isHidden: false },
+    testCases: [{ input: '[3,6,7,11]\n8', expectedOutput: '4', isHidden: false }],
+    hints: [
+      'Binary search on the answer (eating speed k).',
+      'For a given k, compute hours needed = sum(ceil(pile/k)).',
     ],
-    hints: ['Binary search on the answer (eating speed k).', 'For a given k, compute hours needed = sum(ceil(pile/k)).'],
   },
   {
     title: 'Search a 2D Matrix',
@@ -501,10 +572,21 @@ Output: [0,1]
       go: `package main\nfunc searchMatrix(matrix [][]int, target int) bool { return false }`,
     },
     testCases: [
-      { input: '[[1,3,5,7],[10,11,16,20],[23,30,34,60]]\n3', expectedOutput: 'true', isHidden: false },
-      { input: '[[1,3,5,7],[10,11,16,20],[23,30,34,60]]\n13', expectedOutput: 'false', isHidden: false },
+      {
+        input: '[[1,3,5,7],[10,11,16,20],[23,30,34,60]]\n3',
+        expectedOutput: 'true',
+        isHidden: false,
+      },
+      {
+        input: '[[1,3,5,7],[10,11,16,20],[23,30,34,60]]\n13',
+        expectedOutput: 'false',
+        isHidden: false,
+      },
     ],
-    hints: ['Treat the matrix as a flat sorted array.', 'Map 1D index to 2D: row = idx/cols, col = idx%cols.'],
+    hints: [
+      'Treat the matrix as a flat sorted array.',
+      'Map 1D index to 2D: row = idx/cols, col = idx%cols.',
+    ],
   },
 
   // ── Linked Lists ──────────────────────────────────────────────────────────
@@ -522,7 +604,10 @@ Output: [0,1]
       go: `type ListNode struct { Val int; Next *ListNode }\nfunc reverseList(head *ListNode) *ListNode { return nil }`,
     },
     testCases: [],
-    hints: ['Use three pointers: prev, curr, next.', 'Iteratively reverse the next pointer of each node.'],
+    hints: [
+      'Use three pointers: prev, curr, next.',
+      'Iteratively reverse the next pointer of each node.',
+    ],
   },
   {
     title: 'Merge Two Sorted Lists',
@@ -538,7 +623,10 @@ Output: [0,1]
       go: `func mergeTwoLists(list1 *ListNode, list2 *ListNode) *ListNode { return nil }`,
     },
     testCases: [],
-    hints: ['Use a dummy head node.', 'Compare the heads of both lists and attach the smaller one.'],
+    hints: [
+      'Use a dummy head node.',
+      'Compare the heads of both lists and attach the smaller one.',
+    ],
   },
   {
     title: 'Remove Nth Node From End of List',
@@ -554,7 +642,10 @@ Output: [0,1]
       go: `func removeNthFromEnd(head *ListNode, n int) *ListNode { return nil }`,
     },
     testCases: [],
-    hints: ['Use two pointers with a gap of n.', 'When the fast pointer reaches the end, slow pointer is at the node before the target.'],
+    hints: [
+      'Use two pointers with a gap of n.',
+      'When the fast pointer reaches the end, slow pointer is at the node before the target.',
+    ],
   },
   {
     title: 'Reorder List',
@@ -570,7 +661,10 @@ Output: [0,1]
       go: `func reorderList(head *ListNode) {}`,
     },
     testCases: [],
-    hints: ['Find the middle, reverse the second half, then merge.', 'Three steps: slow/fast pointer for mid, reverse, interleave.'],
+    hints: [
+      'Find the middle, reverse the second half, then merge.',
+      'Three steps: slow/fast pointer for mid, reverse, interleave.',
+    ],
   },
   {
     title: 'LRU Cache',
@@ -586,7 +680,10 @@ Output: [0,1]
       go: `type LRUCache struct{}\nfunc Constructor(capacity int) LRUCache { return LRUCache{} }\nfunc (c *LRUCache) Get(key int) int { return -1 }\nfunc (c *LRUCache) Put(key int, value int) {}`,
     },
     testCases: [],
-    hints: ['Use a doubly linked list + hashmap.', 'The map gives O(1) access; the list maintains LRU order.'],
+    hints: [
+      'Use a doubly linked list + hashmap.',
+      'The map gives O(1) access; the list maintains LRU order.',
+    ],
   },
 
   // ── Trees ─────────────────────────────────────────────────────────────────
@@ -604,7 +701,10 @@ Output: [0,1]
       go: `func invertTree(root *TreeNode) *TreeNode { return nil }`,
     },
     testCases: [],
-    hints: ['Swap the left and right children recursively.', 'Works with both DFS (recursive) and BFS (queue).'],
+    hints: [
+      'Swap the left and right children recursively.',
+      'Works with both DFS (recursive) and BFS (queue).',
+    ],
   },
   {
     title: 'Maximum Depth of Binary Tree',
@@ -620,7 +720,10 @@ Output: [0,1]
       go: `func maxDepth(root *TreeNode) int { return 0 }`,
     },
     testCases: [],
-    hints: ['maxDepth = 1 + max(maxDepth(left), maxDepth(right))', 'Base case: null node returns 0.'],
+    hints: [
+      'maxDepth = 1 + max(maxDepth(left), maxDepth(right))',
+      'Base case: null node returns 0.',
+    ],
   },
   {
     title: 'Diameter of Binary Tree',
@@ -636,7 +739,10 @@ Output: [0,1]
       go: `func diameterOfBinaryTree(root *TreeNode) int { return 0 }`,
     },
     testCases: [],
-    hints: ['The diameter through a node = leftHeight + rightHeight.', 'Track the max diameter globally as you compute heights with DFS.'],
+    hints: [
+      'The diameter through a node = leftHeight + rightHeight.',
+      'Track the max diameter globally as you compute heights with DFS.',
+    ],
   },
   {
     title: 'Balanced Binary Tree',
@@ -652,7 +758,10 @@ Output: [0,1]
       go: `func isBalanced(root *TreeNode) bool { return false }`,
     },
     testCases: [],
-    hints: ['Return -1 from your height function to signal unbalanced.', 'If |leftH - rightH| > 1, return -1 instead of the height.'],
+    hints: [
+      'Return -1 from your height function to signal unbalanced.',
+      'If |leftH - rightH| > 1, return -1 instead of the height.',
+    ],
   },
   {
     title: 'Binary Tree Level Order Traversal',
@@ -668,7 +777,10 @@ Output: [0,1]
       go: `func levelOrder(root *TreeNode) [][]int { return nil }`,
     },
     testCases: [],
-    hints: ['Use a queue (BFS).', 'Process each level completely before adding children for the next level.'],
+    hints: [
+      'Use a queue (BFS).',
+      'Process each level completely before adding children for the next level.',
+    ],
   },
 
   // ── Dynamic Programming ───────────────────────────────────────────────────
@@ -689,7 +801,10 @@ Output: [0,1]
       { input: '3', expectedOutput: '3', isHidden: false },
       { input: '5', expectedOutput: '8', isHidden: false },
     ],
-    hints: ['This is the Fibonacci sequence.', 'dp[i] = dp[i-1] + dp[i-2], base cases dp[1]=1, dp[2]=2.'],
+    hints: [
+      'This is the Fibonacci sequence.',
+      'dp[i] = dp[i-1] + dp[i-2], base cases dp[1]=1, dp[2]=2.',
+    ],
   },
   {
     title: 'House Robber',
@@ -708,7 +823,10 @@ Output: [0,1]
       { input: '[1,2,3,1]', expectedOutput: '4', isHidden: false },
       { input: '[2,7,9,3,1]', expectedOutput: '12', isHidden: false },
     ],
-    hints: ['dp[i] = max(dp[i-1], dp[i-2] + nums[i])', 'You only need the previous two values — O(1) space.'],
+    hints: [
+      'dp[i] = max(dp[i-1], dp[i-2] + nums[i])',
+      'You only need the previous two values — O(1) space.',
+    ],
   },
   {
     title: 'Coin Change',
@@ -727,7 +845,10 @@ Output: [0,1]
       { input: '[1,5,11]\n15', expectedOutput: '3', isHidden: false },
       { input: '[2]\n3', expectedOutput: '-1', isHidden: false },
     ],
-    hints: ['Build a dp array where dp[i] = min coins to make amount i.', 'For each amount, try each coin: dp[i] = min(dp[i], dp[i-coin]+1).'],
+    hints: [
+      'Build a dp array where dp[i] = min coins to make amount i.',
+      'For each amount, try each coin: dp[i] = min(dp[i], dp[i-coin]+1).',
+    ],
   },
   {
     title: 'Longest Common Subsequence',
@@ -746,7 +867,10 @@ Output: [0,1]
       { input: '"abcde"\n"ace"', expectedOutput: '3', isHidden: false },
       { input: '"abc"\n"abc"', expectedOutput: '3', isHidden: false },
     ],
-    hints: ['2D DP table: dp[i][j] = LCS of text1[:i] and text2[:j].', 'If chars match: dp[i][j] = 1 + dp[i-1][j-1], else max(dp[i-1][j], dp[i][j-1]).'],
+    hints: [
+      '2D DP table: dp[i][j] = LCS of text1[:i] and text2[:j].',
+      'If chars match: dp[i][j] = 1 + dp[i-1][j-1], else max(dp[i-1][j], dp[i][j-1]).',
+    ],
   },
   {
     title: 'Min Cost Climbing Stairs',
@@ -783,7 +907,12 @@ Output: [0,1]
       go: `package main\nfunc numIslands(grid [][]byte) int { return 0 }`,
     },
     testCases: [
-      { input: '[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]', expectedOutput: '3', isHidden: false },
+      {
+        input:
+          '[["1","1","0","0","0"],["1","1","0","0","0"],["0","0","1","0","0"],["0","0","0","1","1"]]',
+        expectedOutput: '3',
+        isHidden: false,
+      },
     ],
     hints: ['DFS/BFS from each unvisited "1".', 'Mark visited cells as "0" to avoid revisiting.'],
   },
@@ -801,7 +930,10 @@ Output: [0,1]
       go: `func cloneGraph(node *Node) *Node { return nil }`,
     },
     testCases: [],
-    hints: ['Use a hash map to map original nodes to cloned nodes.', 'DFS/BFS through original graph, creating clones.'],
+    hints: [
+      'Use a hash map to map original nodes to cloned nodes.',
+      'DFS/BFS through original graph, creating clones.',
+    ],
   },
   {
     title: 'Course Schedule',
@@ -820,7 +952,10 @@ Output: [0,1]
       { input: '2\n[[1,0]]', expectedOutput: 'true', isHidden: false },
       { input: '2\n[[1,0],[0,1]]', expectedOutput: 'false', isHidden: false },
     ],
-    hints: ['This is cycle detection in a directed graph.', 'Use DFS with 3 states: unvisited, visiting, visited.'],
+    hints: [
+      'This is cycle detection in a directed graph.',
+      'Use DFS with 3 states: unvisited, visiting, visited.',
+    ],
   },
   {
     title: 'Pacific Atlantic Water Flow',
@@ -836,7 +971,10 @@ Output: [0,1]
       go: `package main\nfunc pacificAtlantic(heights [][]int) [][]int { return nil }`,
     },
     testCases: [],
-    hints: ['BFS/DFS backwards from ocean boundaries.', 'Find intersection of cells reachable from both oceans.'],
+    hints: [
+      'BFS/DFS backwards from ocean boundaries.',
+      'Find intersection of cells reachable from both oceans.',
+    ],
   },
   {
     title: 'Word Ladder',
@@ -852,9 +990,16 @@ Output: [0,1]
       go: `package main\nfunc ladderLength(beginWord string, endWord string, wordList []string) int { return 0 }`,
     },
     testCases: [
-      { input: '"hit"\n"cog"\n["hot","dot","dog","lot","log","cog"]', expectedOutput: '5', isHidden: false },
+      {
+        input: '"hit"\n"cog"\n["hot","dot","dog","lot","log","cog"]',
+        expectedOutput: '5',
+        isHidden: false,
+      },
     ],
-    hints: ['BFS from beginWord.', 'Try changing each character to find neighbors in the word list.'],
+    hints: [
+      'BFS from beginWord.',
+      'Try changing each character to find neighbors in the word list.',
+    ],
   },
 
   // ── Valid Sudoku, Product Except Self, Encode/Decode, Longest Consecutive, Sort Colors ──
@@ -887,10 +1032,11 @@ Output: [0,1]
       typescript: `function productExceptSelf(nums: number[]): number[] { return []; }`,
       go: `package main\nfunc productExceptSelf(nums []int) []int { return nil }`,
     },
-    testCases: [
-      { input: '[1,2,3,4]', expectedOutput: '[24,12,8,6]', isHidden: false },
+    testCases: [{ input: '[1,2,3,4]', expectedOutput: '[24,12,8,6]', isHidden: false }],
+    hints: [
+      'Compute prefix products left-to-right.',
+      'Then multiply by suffix products right-to-left.',
     ],
-    hints: ['Compute prefix products left-to-right.', 'Then multiply by suffix products right-to-left.'],
   },
   {
     title: 'Longest Consecutive Sequence',
@@ -905,9 +1051,7 @@ Output: [0,1]
       typescript: `function longestConsecutive(nums: number[]): number { return 0; }`,
       go: `package main\nfunc longestConsecutive(nums []int) int { return 0 }`,
     },
-    testCases: [
-      { input: '[100,4,200,1,3,2]', expectedOutput: '4', isHidden: false },
-    ],
+    testCases: [{ input: '[100,4,200,1,3,2]', expectedOutput: '4', isHidden: false }],
     hints: ['Put all numbers in a set.', 'Only start counting from n where n-1 is NOT in the set.'],
   },
   {
@@ -923,10 +1067,11 @@ Output: [0,1]
       typescript: `function sortColors(nums: number[]): void {}`,
       go: `package main\nfunc sortColors(nums []int) {}`,
     },
-    testCases: [
-      { input: '[2,0,2,1,1,0]', expectedOutput: '[0,0,1,1,2,2]', isHidden: false },
+    testCases: [{ input: '[2,0,2,1,1,0]', expectedOutput: '[0,0,1,1,2,2]', isHidden: false }],
+    hints: [
+      'Dutch National Flag algorithm: 3 pointers (low, mid, high).',
+      'Swap based on nums[mid]: 0 goes to low, 2 goes to high.',
     ],
-    hints: ['Dutch National Flag algorithm: 3 pointers (low, mid, high).', 'Swap based on nums[mid]: 0 goes to low, 2 goes to high.'],
   },
 ]
 

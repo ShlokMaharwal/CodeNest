@@ -1,14 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { connectDB } from '@/lib/mongodb'
 import { RoomModel } from '@/lib/models/Room'
 import { SnapshotModel } from '@/lib/models/Snapshot'
+import { connectDB } from '@/lib/mongodb'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ roomId: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ roomId: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
@@ -28,9 +25,7 @@ export async function GET(
 
     let snapshots = null
     if (includeSnapshots) {
-      snapshots = await SnapshotModel.find({ roomId })
-        .sort({ timestamp: 1 })
-        .lean()
+      snapshots = await SnapshotModel.find({ roomId }).sort({ timestamp: 1 }).lean()
     }
 
     return NextResponse.json({ room, snapshots })
@@ -40,10 +35,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ roomId: string }> }
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ roomId: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
@@ -100,7 +92,7 @@ export async function PATCH(
     const updated = await RoomModel.findOneAndUpdate(
       { roomId },
       { $set: updates },
-      { new: true }
+      { new: true },
     ).lean()
 
     return NextResponse.json({ room: updated })
@@ -112,7 +104,7 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ roomId: string }> }
+  { params }: { params: Promise<{ roomId: string }> },
 ) {
   try {
     const session = await getServerSession(authOptions)

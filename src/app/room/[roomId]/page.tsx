@@ -1,29 +1,36 @@
 'use client'
-import { useEffect, useState, useCallback, useRef } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import { getSocket, disconnectSocket } from '@/lib/socket'
-import { LiveRoomState, TestCase, ExecutionResult, STARTER_CODE, Problem, UserRole, ActiveUser } from '@/types'
 import { CodeEditor } from '@/components/editor/CodeEditor'
-import { Toolbar } from '@/components/editor/Toolbar'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { TestCasePanel } from '@/components/editor/TestCasePanel'
-import { OutputPanel } from '@/components/editor/OutputPanel'
-import { NotesPanel } from '@/components/editor/NotesPanel'
 import { HintPanel } from '@/components/editor/HintPanel'
+import { NotesPanel } from '@/components/editor/NotesPanel'
+import { OutputPanel } from '@/components/editor/OutputPanel'
 import { ReviewPanel } from '@/components/editor/ReviewPanel'
+import { TestCasePanel } from '@/components/editor/TestCasePanel'
+import { Toolbar } from '@/components/editor/Toolbar'
+import { Logo } from '@/components/Logo'
+import { ProblemPicker } from '@/components/ProblemPicker'
+import { ConnectionStatus } from '@/components/room/ConnectionStatus'
+import { EndedBanner } from '@/components/room/EndedBanner'
 import { InterviewerBar } from '@/components/room/InterviewerBar'
 import { ProblemPanel } from '@/components/room/ProblemPanel'
-import { Timer } from '@/components/room/Timer'
-import { ConnectionStatus } from '@/components/room/ConnectionStatus'
-import { UserAvatars } from '@/components/room/UserAvatars'
-import { EndedBanner } from '@/components/room/EndedBanner'
 import { StatusBar } from '@/components/room/StatusBar'
-import { ProblemPicker } from '@/components/ProblemPicker'
+import { Timer } from '@/components/room/Timer'
+import { UserAvatars } from '@/components/room/UserAvatars'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { Tabs } from '@/components/ui/Tabs'
-import { Copy, Check, LogOut, Link2 } from 'lucide-react'
-import { Logo } from '@/components/Logo'
-import Link from 'next/link'
+import { disconnectSocket, getSocket } from '@/lib/socket'
+import {
+  ActiveUser,
+  ExecutionResult,
+  LiveRoomState,
+  Problem,
+  STARTER_CODE,
+  TestCase,
+  UserRole,
+} from '@/types'
+import { Check, Link2, LogOut } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 type ConnectionStatusType = 'connected' | 'reconnecting' | 'disconnected'
 type SidePanel = 'testcases' | 'output' | 'notes' | 'hints' | 'review'
@@ -36,7 +43,6 @@ export default function RoomPage() {
   const roomId = params.roomId as string
   const inviteToken = searchParams.get('token') || ''
 
-  
   const [role, setRole] = useState<UserRole>('candidate')
   const [users, setUsers] = useState<ActiveUser[]>([])
   const [code, setCode] = useState(STARTER_CODE['javascript'])
@@ -50,19 +56,18 @@ export default function RoomPage() {
   const [hintsEnabled, setHintsEnabled] = useState(true)
   const [editorLockedBy, setEditorLockedBy] = useState<string | null>(null)
   const [controlledBy, setControlledBy] = useState<'interviewer' | 'candidate'>('candidate')
-  const [roomStatus, setRoomStatus] = useState<'waiting' | 'active' | 'ended'>('waiting')
+  const [_roomStatus, setRoomStatus] = useState<'waiting' | 'active' | 'ended'>('waiting')
   const [problem, setProblem] = useState<Problem | null>(null)
   const [timerStartedAt, setTimerStartedAt] = useState<number | undefined>()
   const [timerDurationMs, setTimerDurationMs] = useState<number | undefined>()
   const [inviteLink, setInviteLink] = useState('')
 
-  
   const [executing, setExecuting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [connStatus, setConnStatus] = useState<ConnectionStatusType>('disconnected')
   const [activePanel, setActivePanel] = useState<SidePanel>('testcases')
   const [showProblemPicker, setShowProblemPicker] = useState(false)
-  const [replayLink, setReplayLink] = useState('')
+  const [_replayLink, setReplayLink] = useState('')
   const [showEndedBanner, setShowEndedBanner] = useState(false)
 
   const codeRef = useRef(code)
@@ -71,12 +76,10 @@ export default function RoomPage() {
   const roleRef = useRef<UserRole>('candidate')
   const socketIdRef = useRef<string>('')
 
-  
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
   }, [status, router])
 
-  
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault()
@@ -86,7 +89,6 @@ export default function RoomPage() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [])
 
-  
   const fetchInviteLink = useCallback(async () => {
     try {
       const res = await fetch(`/api/rooms/${roomId}/invite`)
@@ -97,7 +99,6 @@ export default function RoomPage() {
     } catch {}
   }, [roomId])
 
-  
   useEffect(() => {
     if (!session?.user) return
 
@@ -119,36 +120,37 @@ export default function RoomPage() {
 
     if (socket.connected) joinRoom()
 
-    
+    socket.on(
+      'room-state',
+      (state: LiveRoomState & { myRole: UserRole; myHintTexts?: string[] }) => {
+        setRole(state.myRole)
+        roleRef.current = state.myRole
+        setUsers(state.users)
+        setCode(state.code || STARTER_CODE[state.language] || '')
+        setLanguage(state.language)
+        setTestCases(state.testCases || [{ input: '', expectedOutput: '' }])
+        setOutput(state.output)
+        setNotes(state.notes || '')
+        setHintsUsed(state.hintsUsed || 0)
+        // Restore persisted hint texts so the panel is populated after a refresh
+        if (state.myHintTexts && state.myHintTexts.length > 0) {
+          setHints(state.myHintTexts)
+        }
+        setHintsEnabled(state.hintsEnabled ?? true)
+        setMaxHints(state.maxHints ?? 5)
+        setEditorLockedBy(state.editorLockedBy)
+        setControlledBy(state.controlledBy || 'candidate')
+        setRoomStatus(state.status)
+        if (state.timerStartedAt) setTimerStartedAt(state.timerStartedAt)
+        if (state.timerDurationMs) setTimerDurationMs(state.timerDurationMs)
 
-    socket.on('room-state', (state: LiveRoomState & { myRole: UserRole; myHintTexts?: string[] }) => {
-      setRole(state.myRole)
-      roleRef.current = state.myRole
-      setUsers(state.users)
-      setCode(state.code || STARTER_CODE[state.language] || '')
-      setLanguage(state.language)
-      setTestCases(state.testCases || [{ input: '', expectedOutput: '' }])
-      setOutput(state.output)
-      setNotes(state.notes || '')
-      setHintsUsed(state.hintsUsed || 0)
-      // Restore persisted hint texts so the panel is populated after a refresh
-      if (state.myHintTexts && state.myHintTexts.length > 0) {
-        setHints(state.myHintTexts)
-      }
-      setHintsEnabled(state.hintsEnabled ?? true)
-      setMaxHints(state.maxHints ?? 5)
-      setEditorLockedBy(state.editorLockedBy)
-      setControlledBy(state.controlledBy || 'candidate')
-      setRoomStatus(state.status)
-      if (state.timerStartedAt) setTimerStartedAt(state.timerStartedAt)
-      if (state.timerDurationMs) setTimerDurationMs(state.timerDurationMs)
+        codeRef.current = state.code || ''
+        languageRef.current = state.language
+        testCasesRef.current = state.testCases || []
 
-      codeRef.current = state.code || ''
-      languageRef.current = state.language
-      testCasesRef.current = state.testCases || []
-
-      if (state.myRole === 'interviewer') fetchInviteLink()
-    })
+        if (state.myRole === 'interviewer') fetchInviteLink()
+      },
+    )
 
     socket.on('code-update', ({ code: newCode }: { code: string }) => {
       codeRef.current = newCode
@@ -181,9 +183,12 @@ export default function RoomPage() {
     })
     socket.on('editor-unlocked', () => setEditorLockedBy(null))
 
-    socket.on('control-changed', ({ controlledBy: cb }: { controlledBy: 'interviewer' | 'candidate' }) => {
-      setControlledBy(cb)
-    })
+    socket.on(
+      'control-changed',
+      ({ controlledBy: cb }: { controlledBy: 'interviewer' | 'candidate' }) => {
+        setControlledBy(cb)
+      },
+    )
 
     socket.on('hint-count-update', ({ hintsUsed: h }: { hintsUsed: number }) => {
       setHintsUsed(h)
@@ -238,35 +243,45 @@ export default function RoomPage() {
     }
   }, [session, roomId, inviteToken, fetchInviteLink, router])
 
-  
+  const handleCodeChange = useCallback(
+    (newCode: string) => {
+      codeRef.current = newCode
+      setCode(newCode)
+      getSocket().emit('code-change', { roomId, code: newCode })
+    },
+    [roomId],
+  )
 
-  const handleCodeChange = useCallback((newCode: string) => {
-    codeRef.current = newCode
-    setCode(newCode)
-    getSocket().emit('code-change', { roomId, code: newCode })
-  }, [roomId])
+  const handleLanguageChange = useCallback(
+    (lang: string) => {
+      const newCode = STARTER_CODE[lang] || ''
+      languageRef.current = lang
+      codeRef.current = newCode
+      setLanguage(lang)
+      setCode(newCode)
+      const socket = getSocket()
+      socket.emit('language-change', { roomId, language: lang })
+      socket.emit('code-change', { roomId, code: newCode })
+    },
+    [roomId],
+  )
 
-  const handleLanguageChange = useCallback((lang: string) => {
-    const newCode = STARTER_CODE[lang] || ''
-    languageRef.current = lang
-    codeRef.current = newCode
-    setLanguage(lang)
-    setCode(newCode)
-    const socket = getSocket()
-    socket.emit('language-change', { roomId, language: lang })
-    socket.emit('code-change', { roomId, code: newCode })
-  }, [roomId])
+  const handleTestCasesChange = useCallback(
+    (tc: TestCase[]) => {
+      testCasesRef.current = tc
+      setTestCases(tc)
+      getSocket().emit('test-cases-change', { roomId, testCases: tc })
+    },
+    [roomId],
+  )
 
-  const handleTestCasesChange = useCallback((tc: TestCase[]) => {
-    testCasesRef.current = tc
-    setTestCases(tc)
-    getSocket().emit('test-cases-change', { roomId, testCases: tc })
-  }, [roomId])
-
-  const handleNotesChange = useCallback((n: string) => {
-    setNotes(n)
-    getSocket().emit('notes-change', { roomId, notes: n })
-  }, [roomId])
+  const handleNotesChange = useCallback(
+    (n: string) => {
+      setNotes(n)
+      getSocket().emit('notes-change', { roomId, notes: n })
+    },
+    [roomId],
+  )
 
   const handleRun = useCallback(async () => {
     setExecuting(true)
@@ -313,22 +328,32 @@ export default function RoomPage() {
     getSocket().emit('interview-end', { roomId })
   }, [roomId])
 
-  const handleStartTimer = useCallback((durationMinutes: number) => {
-    getSocket().emit('timer-start', { roomId, durationMinutes })
-  }, [roomId])
+  const handleStartTimer = useCallback(
+    (durationMinutes: number) => {
+      getSocket().emit('timer-start', { roomId, durationMinutes })
+    },
+    [roomId],
+  )
 
-  const handleSelectProblem = useCallback((p: Problem) => {
-    setProblem(p)
-    setShowProblemPicker(false)
-    const starterCode = p.starterCode?.[language as keyof typeof p.starterCode] || STARTER_CODE[language] || ''
-    getSocket().emit('problem-change', { roomId, problemId: p._id, problem: p })
-  }, [roomId, language])
+  const handleSelectProblem = useCallback(
+    (p: Problem) => {
+      setProblem(p)
+      setShowProblemPicker(false)
+      const _starterCode =
+        p.starterCode?.[language as keyof typeof p.starterCode] || STARTER_CODE[language] || ''
+      getSocket().emit('problem-change', { roomId, problemId: p._id, problem: p })
+    },
+    [roomId, language],
+  )
 
-  const handleHintUsed = useCallback((hint: string) => {
-    setHints((prev) => [...prev, hint])
-    // Send hint text to server so it's persisted in Redis and survives a refresh
-    getSocket().emit('hint-used', { roomId, hintText: hint })
-  }, [roomId])
+  const handleHintUsed = useCallback(
+    (hint: string) => {
+      setHints((prev) => [...prev, hint])
+      // Send hint text to server so it's persisted in Redis and survives a refresh
+      getSocket().emit('hint-used', { roomId, hintText: hint })
+    },
+    [roomId],
+  )
 
   const copyInviteLink = () => {
     if (inviteLink) {
@@ -345,13 +370,11 @@ export default function RoomPage() {
     }
   }
 
-  
   const isCandidate = role === 'candidate'
   const isInterviewer = role === 'interviewer'
   const editorIsLocked = !!editorLockedBy && isCandidate
   const editorIsReadOnly = isCandidate && (editorIsLocked || controlledBy === 'interviewer')
 
-  
   const candidatePanels: SidePanel[] = ['testcases', 'output', 'notes', 'hints']
   const interviewerPanels: SidePanel[] = ['testcases', 'output', 'notes', 'review']
   const availablePanels = isInterviewer ? interviewerPanels : candidatePanels
@@ -364,14 +387,19 @@ export default function RoomPage() {
     review: 'AI Review',
   }
 
-  const PANEL_TABS = availablePanels.map(panel => ({
+  const PANEL_TABS = availablePanels.map((panel) => ({
     id: panel,
     label: PANEL_LABELS[panel],
-    badge: panel === 'output' && output ? (
-      <span className={`w-1.5 h-1.5 rounded-full ${output.status?.toLowerCase().includes('pass') ? 'bg-success' : 'bg-danger'}`} />
-    ) : panel === 'hints' && hintsUsed > 0 ? (
-      <span className="text-[10px] text-warning font-mono bg-warning-soft rounded-full px-1.5">{hintsUsed}</span>
-    ) : undefined,
+    badge:
+      panel === 'output' && output ? (
+        <span
+          className={`w-1.5 h-1.5 rounded-full ${output.status?.toLowerCase().includes('pass') ? 'bg-success' : 'bg-danger'}`}
+        />
+      ) : panel === 'hints' && hintsUsed > 0 ? (
+        <span className="text-[10px] text-warning font-mono bg-warning-soft rounded-full px-1.5">
+          {hintsUsed}
+        </span>
+      ) : undefined,
   }))
 
   if (status === 'loading') {
@@ -387,13 +415,14 @@ export default function RoomPage() {
 
   return (
     <div className="h-screen bg-bg flex flex-col overflow-hidden">
-
       {}
       <header className="h-12 border-b border-border flex items-center justify-between px-3 gap-3 flex-shrink-0 bg-surface">
         <div className="flex items-center gap-2">
           <Logo height={16} />
           <div className="h-4 w-px bg-border" />
-          <span className="text-xs font-mono text-muted truncate max-w-[140px]" title={roomId}>{roomId}</span>
+          <span className="text-xs font-mono text-muted truncate max-w-[140px]" title={roomId}>
+            {roomId}
+          </span>
           <ConnectionStatus state={connStatus} />
         </div>
 
@@ -445,9 +474,7 @@ export default function RoomPage() {
       )}
 
       {}
-      {showEndedBanner && (
-        <EndedBanner roomId={roomId} />
-      )}
+      {showEndedBanner && <EndedBanner roomId={roomId} />}
 
       {}
       <Toolbar
@@ -460,7 +487,6 @@ export default function RoomPage() {
 
       {}
       <div className="flex-1 flex overflow-hidden">
-
         {}
         {problem && (
           <div className="w-80 border-r border-border flex-shrink-0 overflow-hidden">
@@ -498,12 +524,8 @@ export default function RoomPage() {
             {activePanel === 'testcases' && (
               <TestCasePanel testCases={testCases} onChange={handleTestCasesChange} />
             )}
-            {activePanel === 'output' && (
-              <OutputPanel output={output} executing={executing} />
-            )}
-            {activePanel === 'notes' && (
-              <NotesPanel notes={notes} onChange={handleNotesChange} />
-            )}
+            {activePanel === 'output' && <OutputPanel output={output} executing={executing} />}
+            {activePanel === 'notes' && <NotesPanel notes={notes} onChange={handleNotesChange} />}
             {activePanel === 'hints' && isCandidate && (
               <HintPanel
                 roomId={roomId}
@@ -542,10 +564,7 @@ export default function RoomPage() {
 
       {}
       {showProblemPicker && (
-        <ProblemPicker
-          onSelect={handleSelectProblem}
-          onClose={() => setShowProblemPicker(false)}
-        />
+        <ProblemPicker onSelect={handleSelectProblem} onClose={() => setShowProblemPicker(false)} />
       )}
     </div>
   )

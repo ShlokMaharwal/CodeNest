@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server'
 import { connectDB } from '@/lib/mongodb'
 import { redis } from '@/lib/redis'
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   const health = {

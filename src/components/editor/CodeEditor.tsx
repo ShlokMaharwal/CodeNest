@@ -1,12 +1,10 @@
 'use client'
-import { useEffect, useRef } from 'react'
-import Editor, { OnMount } from '@monaco-editor/react'
-import { useTheme } from 'next-themes'
-import { Lock } from 'lucide-react'
 import { codeNestDarkTheme } from '@/styles/monaco-codenest-dark'
 import { codeNestLightTheme } from '@/styles/monaco-codenest-light'
-
-
+import Editor, { OnMount } from '@monaco-editor/react'
+import { Lock } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import { useEffect, useRef } from 'react'
 
 interface CodeEditorProps {
   code: string
@@ -18,8 +16,11 @@ interface CodeEditorProps {
 }
 
 export function CodeEditor({
-  code, language, onChange,
-  readOnly = false, locked = false,
+  code,
+  language,
+  onChange,
+  readOnly = false,
+  locked = false,
   lockedMessage = '🔒 Editor locked by interviewer',
 }: CodeEditorProps) {
   const { resolvedTheme } = useTheme()
@@ -29,7 +30,7 @@ export function CodeEditor({
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor
     monacoRef.current = monaco
-    
+
     monaco.editor.defineTheme('codenest-dark', codeNestDarkTheme as any)
     monaco.editor.defineTheme('codenest-light', codeNestLightTheme as any)
     monaco.editor.setTheme(resolvedTheme === 'dark' ? 'codenest-dark' : 'codenest-light')
@@ -46,10 +47,11 @@ export function CodeEditor({
     }
   }, [code])
 
-  
   useEffect(() => {
     if (monacoRef.current) {
-      monacoRef.current.editor.setTheme(resolvedTheme === 'dark' ? 'codenest-dark' : 'codenest-light')
+      monacoRef.current.editor.setTheme(
+        resolvedTheme === 'dark' ? 'codenest-dark' : 'codenest-light',
+      )
     }
   }, [resolvedTheme])
 
@@ -58,7 +60,10 @@ export function CodeEditor({
   return (
     <div className="relative h-full w-full">
       {}
-      <a href="#editor-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 bg-accent text-[#1a2a0e] px-3 py-1 rounded text-xs">
+      <a
+        href="#editor-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 bg-accent text-[#1a2a0e] px-3 py-1 rounded text-xs"
+      >
         Skip to code editor
       </a>
       <div id="editor-content" className="h-full">
@@ -68,7 +73,7 @@ export function CodeEditor({
           value={code}
           theme={resolvedTheme === 'dark' ? 'codenest-dark' : 'codenest-light'}
           onMount={handleMount}
-          onChange={value => {
+          onChange={(value) => {
             if (!isReadOnly && onChange) onChange(value || '')
           }}
           options={{

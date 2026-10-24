@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import { connectDB } from '@/lib/mongodb'
 import { UserModel } from '@/lib/models/User'
+import { connectDB } from '@/lib/mongodb'
+import bcrypt from 'bcryptjs'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,7 +29,10 @@ export async function POST(req: NextRequest) {
       password: passwordHash,
     })
 
-    return NextResponse.json({ id: user._id.toString(), name: user.name, email: user.email }, { status: 201 })
+    return NextResponse.json(
+      { id: user._id.toString(), name: user.name, email: user.email },
+      { status: 201 },
+    )
   } catch (err: any) {
     console.error('[POST /api/auth/register]', err)
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })

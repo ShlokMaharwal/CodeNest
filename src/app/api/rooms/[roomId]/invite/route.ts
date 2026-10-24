@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { connectDB } from '@/lib/mongodb'
 import { RoomModel } from '@/lib/models/Room'
+import { connectDB } from '@/lib/mongodb'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ roomId: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ roomId: string }> }) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) {
@@ -17,7 +14,7 @@ export async function GET(
     const { roomId } = await params
     await connectDB()
 
-    const room = await RoomModel.findOne({ roomId, createdBy: session.user.email }).lean() as any
+    const room = (await RoomModel.findOne({ roomId, createdBy: session.user.email }).lean()) as any
     if (!room) {
       return NextResponse.json({ error: 'Room not found or unauthorized' }, { status: 404 })
     }

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { executeCode } from '@/lib/wandbox'
 import { incrementWithTTL } from '@/lib/redis'
+import { executeCode } from '@/lib/wandbox'
+import { getServerSession } from 'next-auth'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     if (count > 30) {
       return NextResponse.json(
         { error: 'Too many executions. Wait a moment and try again.' },
-        { status: 429 }
+        { status: 429 },
       )
     }
 
@@ -26,7 +26,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Code and language are required' }, { status: 400 })
     }
 
-    console.log(`[API Execute] ${session.user.email} | ${language} | ${code?.length} chars | ${testCases?.length ?? 0} test cases`)
+    console.log(
+      `[API Execute] ${session.user.email} | ${language} | ${code?.length} chars | ${testCases?.length ?? 0} test cases`,
+    )
 
     const result = await executeCode(code, language, testCases || [])
     return NextResponse.json({ result })

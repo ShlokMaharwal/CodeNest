@@ -1,9 +1,16 @@
 'use client'
-import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import {
-  Lock, Unlock, Edit3, RotateCcw, BookOpen, StopCircle, Clock, ChevronDown
+  BookOpen,
+  ChevronDown,
+  Clock,
+  Edit3,
+  Lock,
+  RotateCcw,
+  StopCircle,
+  Unlock,
 } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
 
 interface InterviewerBarProps {
   editorLocked: boolean
@@ -22,22 +29,37 @@ interface InterviewerBarProps {
 const DURATIONS = [5, 15, 30, 45, 60, 90, 120]
 
 export function InterviewerBar({
-  editorLocked, controlledBy,
-  onLockEditor, onUnlockEditor, onTakeControl, onReturnControl,
-  onChangeProblem, onEndInterview,
-  timerStartedAt, timerDurationMs, onStartTimer,
+  editorLocked,
+  controlledBy,
+  onLockEditor,
+  onUnlockEditor,
+  onTakeControl,
+  onReturnControl,
+  onChangeProblem,
+  onEndInterview,
+  timerStartedAt,
+  timerDurationMs: _timerDurationMs,
+  onStartTimer,
 }: InterviewerBarProps) {
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState(45)
 
   const handleEndClick = () => {
-    if (confirmEnd) { onEndInterview(); setConfirmEnd(false) }
-    else { setConfirmEnd(true); setTimeout(() => setConfirmEnd(false), 3000) }
+    if (confirmEnd) {
+      onEndInterview()
+      setConfirmEnd(false)
+    } else {
+      setConfirmEnd(true)
+      setTimeout(() => setConfirmEnd(false), 3000)
+    }
   }
 
-  const ghostBtn = 'flex items-center gap-1.5 text-xs text-muted hover:text-text hover:bg-surface-3 rounded-md px-2.5 py-1.5 transition-colors duration-[120ms]'
-  const activeBtn = 'flex items-center gap-1.5 text-xs text-accent bg-accent-soft border border-accent/25 rounded-md px-2.5 py-1.5 transition-colors'
-  const warnBtn   = 'flex items-center gap-1.5 text-xs text-warning bg-warning-soft border border-warning/25 rounded-md px-2.5 py-1.5 transition-colors'
+  const ghostBtn =
+    'flex items-center gap-1.5 text-xs text-muted hover:text-text hover:bg-surface-3 rounded-md px-2.5 py-1.5 transition-colors duration-[120ms]'
+  const activeBtn =
+    'flex items-center gap-1.5 text-xs text-accent bg-accent-soft border border-accent/25 rounded-md px-2.5 py-1.5 transition-colors'
+  const warnBtn =
+    'flex items-center gap-1.5 text-xs text-warning bg-warning-soft border border-warning/25 rounded-md px-2.5 py-1.5 transition-colors'
 
   return (
     <div className="h-10 bg-surface-2 border-b border-border flex items-center px-3 gap-1.5 flex-shrink-0">
@@ -51,28 +73,33 @@ export function InterviewerBar({
       {}
       {editorLocked ? (
         <button onClick={onUnlockEditor} className={warnBtn} title="Unlock editor">
-          <Unlock size={12} />Unlock editor
+          <Unlock size={12} />
+          Unlock editor
         </button>
       ) : (
         <button onClick={onLockEditor} className={ghostBtn} title="Lock editor">
-          <Lock size={12} />Lock editor
+          <Lock size={12} />
+          Lock editor
         </button>
       )}
 
       {}
       {controlledBy === 'candidate' ? (
         <button onClick={onTakeControl} className={ghostBtn} title="Take control">
-          <Edit3 size={12} />Take control
+          <Edit3 size={12} />
+          Take control
         </button>
       ) : (
         <button onClick={onReturnControl} className={activeBtn} title="Return control to candidate">
-          <RotateCcw size={12} />Return control
+          <RotateCcw size={12} />
+          Return control
         </button>
       )}
 
       {}
       <button onClick={onChangeProblem} className={ghostBtn} title="Change problem">
-        <BookOpen size={12} />Change problem
+        <BookOpen size={12} />
+        Change problem
       </button>
       <div className="h-4 w-px bg-border" />
 
@@ -83,12 +110,19 @@ export function InterviewerBar({
           <div className="relative">
             <select
               value={selectedDuration}
-              onChange={e => setSelectedDuration(Number(e.target.value))}
+              onChange={(e) => setSelectedDuration(Number(e.target.value))}
               className="bg-transparent text-xs text-text border-none focus:outline-none cursor-pointer pr-4 py-0.5 font-mono appearance-none"
             >
-              {DURATIONS.map(d => <option key={d} value={d} className="bg-bg">{d}m</option>)}
+              {DURATIONS.map((d) => (
+                <option key={d} value={d} className="bg-bg">
+                  {d}m
+                </option>
+              ))}
             </select>
-            <ChevronDown size={10} className="absolute right-0 top-1/2 -translate-y-1/2 text-subtle pointer-events-none" />
+            <ChevronDown
+              size={10}
+              className="absolute right-0 top-1/2 -translate-y-1/2 text-subtle pointer-events-none"
+            />
           </div>
           <button
             onClick={() => onStartTimer?.(selectedDuration)}
@@ -104,7 +138,9 @@ export function InterviewerBar({
           <button
             onClick={() => confirm('Reset current timer?') && onStartTimer?.(selectedDuration)}
             className="text-[10px] text-subtle hover:text-text hover:underline ml-1"
-          >Reset</button>
+          >
+            Reset
+          </button>
         </div>
       )}
 

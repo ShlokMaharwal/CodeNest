@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
-import { Search, BookOpen, Plus, Trash2, Code2 } from 'lucide-react'
-import { Problem } from '@/types'
-import { Dialog, DialogHeader, DialogBody, DialogFooter } from '@/components/ui/Dialog'
 import { Button } from '@/components/ui/Button'
+import { Dialog, DialogBody, DialogFooter, DialogHeader } from '@/components/ui/Dialog'
 import { Input } from '@/components/ui/Input'
+import { Problem } from '@/types'
+import { BookOpen, Code2, Plus, Search, Trash2 } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 
 interface ProblemPickerProps {
   onSelect: (problem: Problem) => void
@@ -22,17 +22,18 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
   const [search, setSearch] = useState('')
   const [difficulty, setDifficulty] = useState<string>('All')
   const [loading, setLoading] = useState(true)
-  const [total, setTotal] = useState(0)
+  const [_total, setTotal] = useState(0)
 
-  
   const [mode, setMode] = useState<'picker' | 'custom'>('picker')
   const [customTitle, setCustomTitle] = useState('')
   const [customDifficulty, setCustomDifficulty] = useState<'Easy' | 'Medium' | 'Hard'>('Medium')
   const [customDesc, setCustomDesc] = useState('')
-  const [customStarter, setCustomStarter] = useState(`// JavaScript\nfunction solution() {\n  // Your code here\n}`)
-  const [customTestcases, setCustomTestcases] = useState<{ input: string; expectedOutput: string; isHidden: boolean }[]>([
-    { input: '', expectedOutput: '', isHidden: false }
-  ])
+  const [customStarter, setCustomStarter] = useState(
+    `// JavaScript\nfunction solution() {\n  // Your code here\n}`,
+  )
+  const [customTestcases, setCustomTestcases] = useState<
+    { input: string; expectedOutput: string; isHidden: boolean }[]
+  >([{ input: '', expectedOutput: '', isHidden: false }])
 
   const fetchProblems = useCallback(async () => {
     setLoading(true)
@@ -67,9 +68,7 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
   }
 
   const updateTestcase = (index: number, key: 'input' | 'expectedOutput', value: string) => {
-    setCustomTestcases((prev) =>
-      prev.map((tc, i) => (i === index ? { ...tc, [key]: value } : tc))
-    )
+    setCustomTestcases((prev) => prev.map((tc, i) => (i === index ? { ...tc, [key]: value } : tc)))
   }
 
   const handleCreateCustom = (e: React.FormEvent) => {
@@ -112,7 +111,9 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
               type="button"
               onClick={() => setMode('picker')}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-all duration-[120ms] ${
-                mode === 'picker' ? 'bg-accent text-[#1a2a0e] shadow-sm' : 'text-muted hover:text-text'
+                mode === 'picker'
+                  ? 'bg-accent text-[#1a2a0e] shadow-sm'
+                  : 'text-muted hover:text-text'
               }`}
             >
               Select Built-in
@@ -121,7 +122,9 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
               type="button"
               onClick={() => setMode('custom')}
               className={`px-3 py-1 rounded-md text-xs font-medium transition-all duration-[120ms] ${
-                mode === 'custom' ? 'bg-accent text-[#1a2a0e] shadow-sm' : 'text-muted hover:text-text'
+                mode === 'custom'
+                  ? 'bg-accent text-[#1a2a0e] shadow-sm'
+                  : 'text-muted hover:text-text'
               }`}
             >
               Create Custom
@@ -230,8 +233,8 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
                             ? diff === 'Easy'
                               ? 'bg-success-soft text-success border border-success/20 font-medium'
                               : diff === 'Medium'
-                              ? 'bg-warning-soft text-warning border border-warning/20 font-medium'
-                              : 'bg-danger-soft text-danger border border-danger/20 font-medium'
+                                ? 'bg-warning-soft text-warning border border-warning/20 font-medium'
+                                : 'bg-danger-soft text-danger border border-danger/20 font-medium'
                             : 'text-muted hover:text-text border border-transparent'
                         }`}
                       >
@@ -244,7 +247,9 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
 
               {}
               <div>
-                <label className="text-xs font-medium text-muted block mb-1.5">Problem Description / Rules</label>
+                <label className="text-xs font-medium text-muted block mb-1.5">
+                  Problem Description / Rules
+                </label>
                 <textarea
                   required
                   rows={4}
@@ -258,8 +263,12 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
               {}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-xs font-medium text-muted font-sans">Starter Code Template</label>
-                  <span className="text-[10px] font-mono text-muted bg-surface-2 border border-border rounded px-1.5 py-0.5 select-none">JS / Generic</span>
+                  <label className="text-xs font-medium text-muted font-sans">
+                    Starter Code Template
+                  </label>
+                  <span className="text-[10px] font-mono text-muted bg-surface-2 border border-border rounded px-1.5 py-0.5 select-none">
+                    JS / Generic
+                  </span>
                 </div>
                 <textarea
                   required
@@ -288,8 +297,13 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
 
                 <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
                   {customTestcases.map((tc, index) => (
-                    <div key={index} className="flex gap-2 items-center bg-surface-2 border border-border/60 rounded-md p-2">
-                      <span className="text-[11px] font-mono text-muted select-none w-5 text-center">#{index + 1}</span>
+                    <div
+                      key={index}
+                      className="flex gap-2 items-center bg-surface-2 border border-border/60 rounded-md p-2"
+                    >
+                      <span className="text-[11px] font-mono text-muted select-none w-5 text-center">
+                        #{index + 1}
+                      </span>
                       <div className="flex-1 grid grid-cols-2 gap-2">
                         <input
                           required
@@ -325,18 +339,10 @@ export function ProblemPicker({ onSelect, onClose }: ProblemPickerProps) {
 
             {}
             <DialogFooter>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => setMode('picker')}
-              >
+              <Button type="button" variant="secondary" onClick={() => setMode('picker')}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-                icon={<Code2 size={13} />}
-              >
+              <Button type="submit" variant="primary" icon={<Code2 size={13} />}>
                 Set Live Custom Question
               </Button>
             </DialogFooter>

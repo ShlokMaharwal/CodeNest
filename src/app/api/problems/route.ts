@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { connectDB } from '@/lib/mongodb'
 import { ProblemModel } from '@/lib/models/Problem'
+import { connectDB } from '@/lib/mongodb'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(req: NextRequest) {
   try {

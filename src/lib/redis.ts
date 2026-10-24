@@ -10,18 +10,20 @@ const getRedisUrl = () => {
 
 const globalForRedis = global as unknown as { redis: Redis }
 
-export const redis: Redis = globalForRedis.redis || new Redis(getRedisUrl(), {
-  maxRetriesPerRequest: 3,
-  retryStrategy(times) {
-    const delay = Math.min(times * 100, 3000)
-    return delay
-  },
-  reconnectOnError(err) {
-    const targetErrors = ['READONLY', 'ECONNRESET', 'ECONNREFUSED']
-    if (targetErrors.some((e) => err.message.includes(e))) return true
-    return false
-  },
-})
+export const redis: Redis =
+  globalForRedis.redis ||
+  new Redis(getRedisUrl(), {
+    maxRetriesPerRequest: 3,
+    retryStrategy(times) {
+      const delay = Math.min(times * 100, 3000)
+      return delay
+    },
+    reconnectOnError(err) {
+      const targetErrors = ['READONLY', 'ECONNRESET', 'ECONNREFUSED']
+      if (targetErrors.some((e) => err.message.includes(e))) return true
+      return false
+    },
+  })
 
 if (process.env.NODE_ENV !== 'production') {
   globalForRedis.redis = redis
