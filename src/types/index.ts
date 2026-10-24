@@ -61,6 +61,7 @@ export interface TestCase {
 }
 
 export interface ExecutionResult {
+  errorCode?: string
   stdout: string | null
   stderr: string | null
   status: string

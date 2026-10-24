@@ -1,7 +1,9 @@
+const { integrityEventSchema } = require('./integrity')
 const { z } = require('zod')
 const { boundedText, language, testCase } = require('./execution-input')
 const base = z.object({ roomId: z.string().regex(/^[a-z0-9]{8}$/) })
 const schemas = {
+  'integrity-event': base.extend({ event: integrityEventSchema }),
   'output-update': base.extend({
     output: z.object({
       stdout: boundedText(256000).nullable(),
