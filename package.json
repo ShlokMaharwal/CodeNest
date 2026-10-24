@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "cross-env NODE_ENV=production node server.js",
     "server": "node server.js",
-    "seed": "npx tsx scripts/seed-problems.ts"
+    "seed": "tsx scripts/seed-problems.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -22,6 +22,7 @@
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
+    "cross-env": "^7.0.3",
     "dotenv": "^17.4.2",
     "framer-motion": "^12.40.0",
     "ioredis": "^5.3.2",
@@ -41,5 +42,8 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5",
     "uuid": "^11.1.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
   }
 }
