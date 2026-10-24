@@ -25,6 +25,22 @@ jobs:
       - run: npm run lint
       - run: npm run test:coverage
       - run: npm run build
+      - name: Build container
+        run: docker build -t codenest:ci .
+      - name: Verify full stack and measure image
+        run: |
+          cp .env.example .env
+          docker compose up -d --no-build
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:3000/api/health > coverage/container-health.json; then break; fi
+            sleep 2
+          done
+          curl --fail --silent http://localhost:3000/api/health
+          docker image inspect codenest:ci --format '{{.Size}}' > coverage/docker-image-bytes.txt
+          echo "Docker image bytes: $(cat coverage/docker-image-bytes.txt)"
+      - name: Stop compose services
+        if: always()
+        run: docker compose down
       - uses: actions/upload-artifact@v4
         if: always()
         with:
