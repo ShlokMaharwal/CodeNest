@@ -1,0 +1,27 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      MONGODB_URI: mongodb://127.0.0.1:27017/codenest
+      REDIS_URL: redis://127.0.0.1:6379
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ci-only-nextauth-secret-with-at-least-32-characters
+      INVITE_TOKEN_SECRET: ci-only-invite-secret-with-at-least-32-characters
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --include=dev
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

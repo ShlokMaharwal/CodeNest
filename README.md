@@ -1,5 +1,7 @@
 # CodeNest
 
+[![CI](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml/badge.svg)](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml)
+
 **Live Demo:** [https://codenest-0xae.onrender.com](https://codenest-0xae.onrender.com)
 
 A 2-person role-based coding interview platform. Interviewer watches. Candidate codes. Gemini gives hints. Every session is replayable.
