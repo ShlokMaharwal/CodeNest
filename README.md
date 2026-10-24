@@ -1,5 +1,7 @@
 # CodeNest
 
+![Backend coverage](./docs/coverage.svg)
+
 [![CI](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml/badge.svg)](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml)
 
 **Live Demo:** [https://codenest-0xae.onrender.com](https://codenest-0xae.onrender.com)
