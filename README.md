@@ -82,3 +82,5 @@ Visit `http://localhost:3000`
 | `timer-start`                                     | Interviewer → Server | Start countdown               |
 | `interview-end`                                   | Interviewer → Server | End interview + save snapshot |
 | `interview-ended`                                 | Server → Client      | Interview over + replay link  |
+
+Render installation note: this existing service installs production dependencies before building. TypeScript (which Next.js uses to load tsconfig path aliases), type declarations, Tailwind, PostCSS and Autoprefixer remain in dependencies so that path works. New deployments can use the explicit npm ci --include=dev build command in render.yaml.
