@@ -1,3 +1,6 @@
+import { revokeInvite } from '../../../../../server/invites'
+import { redis } from '@/lib/redis'
+import { env } from '@/lib/env'
 import { authOptions } from '@/lib/auth'
 import { RoomModel } from '@/lib/models/Room'
 import { SnapshotModel } from '@/lib/models/Snapshot'
@@ -128,6 +131,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Cannot delete an active room' }, { status: 400 })
     }
 
+    await revokeInvite(redis, room.inviteToken, env.INVITE_TOKEN_SECRET)
     await RoomModel.deleteOne({ roomId })
 
     return NextResponse.json({ success: true })

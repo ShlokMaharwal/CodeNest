@@ -1,3 +1,7 @@
+import { signInviteToken, verifyInviteToken } from '@/lib/invite'
+import { revokeInvite } from '../../../../../../server/invites'
+import { redis } from '@/lib/redis'
+import { env } from '@/lib/env'
 import { authOptions } from '@/lib/auth'
 import { RoomModel } from '@/lib/models/Room'
 import { connectDB } from '@/lib/mongodb'
@@ -19,6 +23,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ room
       return NextResponse.json({ error: 'Room not found or unauthorized' }, { status: 404 })
     }
 
+    if (!verifyInviteToken(room.inviteToken, roomId)) {
+      await revokeInvite(redis, room.inviteToken, env.INVITE_TOKEN_SECRET)
+      const refreshed = signInviteToken(roomId)
+      await RoomModel.updateOne(
+        { roomId, inviteToken: room.inviteToken },
+        { $set: { inviteToken: refreshed } },
+      )
+      const current = (await RoomModel.findOne({ roomId }).lean()) as any
+      room.inviteToken = current.inviteToken
+    }
     const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
     const inviteLink = `${baseUrl}/room/${roomId}?token=${room.inviteToken}`
 

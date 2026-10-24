@@ -1,3 +1,4 @@
+const { consumeInvite, revokeInvite } = require('./invites')
 const { getCandidateHints } = require('./hints')
 const { authorizeEvent } = require('./socket-policy')
 
@@ -133,12 +134,10 @@ function registerSocketHandlers(io, dependencies) {
             socket.disconnect()
             return
           }
-          const jwt = require('jsonwebtoken')
-          try {
-            const payload = jwt.verify(inviteToken, env.INVITE_TOKEN_SECRET)
-            if (payload.roomId !== roomId || payload.role !== 'candidate')
-              throw new Error('Invalid invite claims')
-          } catch {
+          if (
+            inviteToken !== room.inviteToken ||
+            !(await consumeInvite(redis, inviteToken, roomId, user.email, env.INVITE_TOKEN_SECRET))
+          ) {
             socket.emit('invite-invalid')
             socket.disconnect()
             return
@@ -347,6 +346,11 @@ function registerSocketHandlers(io, dependencies) {
         const state = await getRoomState(roomId)
         if (!state) return
 
+        await revokeInvite(
+          redis,
+          (await RoomModel.findOne({ roomId })).inviteToken,
+          env.INVITE_TOKEN_SECRET,
+        )
         state.status = 'ended'
         await setRoomState(roomId, state)
 
