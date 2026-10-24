@@ -1,40 +1,101 @@
 # CodeNest
 
-[![CI](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml/badge.svg)](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml)
-![Backend coverage](./docs/coverage.svg)
+A 2-person, role-based coding interview platform with real-time editing, AI hints and replayable sessions.
 
-A two-person coding interview platform: an interviewer controls the session, a candidate writes code, and both share a persistent real-time room. Built with Next.js 15, Socket.io, MongoDB, Redis, NextAuth, Monaco, Wandbox, and Gemini.
+[Live Demo](https://codenest-0xae.onrender.com) · [Quick Start](#quick-start) · [API](#api-reference)
+
+[![CI](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml/badge.svg)](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml)
+
+<p align="center"><img src="docs/screenshots/interviewer-room.png" alt="CodeNest interviewer room with the shared editor and interview controls" width="900"></p>
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/candidate-room.png" alt="CodeNest candidate view with the code editor and candidate tools" width="440">
+      <br><sub>Candidate editor</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/ai-review.png" alt="CodeNest AI review showing solution feedback and a hire recommendation" width="440">
+      <br><sub>AI review</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/replay.png" alt="CodeNest session replay showing a saved code snapshot and timeline controls" width="440">
+      <br><sub>Session replay</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/dashboard.png" alt="CodeNest interviewer dashboard listing interview rooms" width="440">
+      <br><sub>Interviewer dashboard</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/landing.png" alt="CodeNest landing page with the create-room form" width="440">
+      <br><sub>Landing page and room creation</sub>
+    </td>
+    <td></td>
+  </tr>
+</table>
 
 ## Features
 
-- Server-enforced room membership and interviewer controls for locks, timer, problem selection, and interview completion.
-- Code, timer, problem, and lock recovery after reconnect, with persisted snapshots and the existing session replay.
-- Server-counted candidate hints and configurable AI reviews with validated JSON, saved to the room and returned as compatible Markdown.
-- Backend test-case grading with hidden-case privacy: 58 seeded cases across 35 of the 49 catalog problems.
-- Optional integrity reports through Socket.io or the room API, stamped with the authenticated actor and server time.
-- 113 passing unit, API, and socket integration tests; GitHub Actions verification; a non-root Docker app with MongoDB and Redis.
+- Two-person rooms with server-enforced interviewer and candidate roles.
+- Signed invite links that expire after 24 hours and bind to one candidate identity.
+- Real-time code, language, test-case, output, notes and cursor sync through Socket.io.
+- Interviewer controls to lock the editor, take control and return control to the candidate.
+- Candidate AI hints with configurable room limits and server-counted usage.
+- Saved AI reviews covering correctness, code quality, problem solving, communication and a hire recommendation.
+- A synchronized countdown timer controlled by the interviewer.
+- Wandbox code execution for JavaScript, TypeScript, Python, Java, C++, C, Go and Rust.
+- A searchable library of 49 seeded problems; 35 include cases for server-side grading.
+- Session replay from periodic, execution and end-of-interview snapshots.
+
+## How it works
+
+1. Register or sign in with an email and password.
+2. Create a room, configure its duration and hints, and optionally schedule it.
+3. Share the invite link with the candidate, who signs in to join.
+4. Select a problem and start the timer; the candidate writes code in the shared editor.
+5. Run code with test inputs; the candidate can request hints while the interviewer can lock or control the editor.
+6. Generate an AI review with a hire recommendation and end the interview.
+7. Open the room replay from the dashboard to step through saved code snapshots and test results.
+
+## Tech stack
+
+Dependency versions below are resolved in `package-lock.json`; service images and the model default come from the repository configuration.
+
+| Layer          | Technology                                                 | Role                                                       |
+| -------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
+| Runtime        | Node.js 22.x, npm                                          | Custom HTTP and Socket.io server                           |
+| Web            | Next.js 15.5.28, React 18.3.1, TypeScript 5.9.3            | App Router pages and API routes                            |
+| Styling        | Tailwind CSS 3.4.19, Framer Motion 12.x                    | Styles and animation                                       |
+| Editor         | Monaco 0.55.1, React wrapper 4.7.0                         | Shared code editor                                         |
+| Real time      | Socket.io 4.8.3                                            | Room events and code synchronization                       |
+| Authentication | NextAuth 4.24.15, bcryptjs                                 | Credentials login and JWT sessions                         |
+| Database       | MongoDB 7 Compose image, Mongoose 8.24.7                   | Accounts, problems, rooms and snapshots                    |
+| Live state     | Redis 7 Compose image, ioredis 5.10.1                      | Room state, invite bindings, quotas and rate limits        |
+| Execution      | Wandbox HTTP API                                           | Eight configured language runtimes                         |
+| AI             | Gemini `gemini-2.5-flash`, Google Generative AI SDK 0.24.1 | Hints and structured reviews; model configurable           |
+| Verification   | Vitest 5.0.5, ESLint 9, Prettier 3, GitHub Actions         | Tests, coverage, static checks and container health checks |
+| Deployment     | Render, Docker Compose                                     | Node web service or app/MongoDB/Redis stack                |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  Browser[Browser / Monaco] -->|HTTPS| API[Next.js API routes]
-  Browser <-->|Socket.io| Server[Custom Node server]
-  API --> Auth[NextAuth / bcrypt]
-  Auth --> Mongo[(MongoDB)]
-  API --> Mongo
-  API <--> Redis[(Redis)]
-  Server <--> Redis
-  Server --> Mongo
-  API --> Wandbox[Wandbox execution]
-  API --> Gemini[Gemini hints and reviews]
+  Browser[Browser / Monaco] <-->|HTTP + Socket.io| Server[Next.js + Socket.io server]
+  Server <--> Mongo[(MongoDB)]
+  Server <--> Redis[(Redis)]
+  Server --> Wandbox[Wandbox execution API]
+  Server --> Gemini[Gemini hints and reviews]
 ```
 
-Next.js and Socket.io run in the same custom Node process. Redis holds live room state, hint counters, invite bindings, and rate-limit windows. MongoDB stores accounts, problems, room records, reviews, integrity events, and replay snapshots.
+Next.js and Socket.io share the custom Node process in `server.js`. MongoDB stores accounts, problems, room records, reviews and replay snapshots. Redis stores live room state, hint usage, invite bindings and rate-limit windows.
 
-## Local setup
+## Quick start
 
-Use Node.js 22.12 or newer within the Node 22 release line, npm, and Docker Compose (or reachable MongoDB and Redis services).
+Use Node.js 22.12 or newer within the Node 22 release line, npm and Docker Compose.
 
 ```bash
 git clone https://github.com/ShlokMaharwal/CodeNest.git
@@ -43,7 +104,13 @@ npm ci --include=dev
 cp .env.example .env
 ```
 
-Set distinct random values for NEXTAUTH_SECRET and INVITE_TOKEN_SECRET, at least 32 characters each. Generate each with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Set database URLs and both app URLs for your environment. GEMINI_API_KEY is optional; AI endpoints return a compatible unavailable error when it is absent. GEMINI_MODEL defaults to gemini-2.5-flash. All supported environment settings are listed in [.env.example](./.env.example).
+On PowerShell, use `Copy-Item .env.example .env`. In `.env`, replace both secret values with different random strings of at least 32 characters. Generate each value separately:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Keep the local database and app URLs from `.env.example`. Set a real `GEMINI_API_KEY`, or leave it blank to run without AI. Start MongoDB and Redis, seed the problem library, then run the custom development server:
 
 ```bash
 docker compose up -d mongo redis
@@ -51,80 +118,128 @@ npm run seed
 npm run dev
 ```
 
-Open http://localhost:3000. The seed script upserts by title, preserving existing problem IDs instead of clearing the collection. It supplies 49 problems, with grading cases for 35. It does not create user accounts.
+Open [localhost:3000](http://localhost:3000) and register an account. Seeding upserts 49 problems by title without deleting existing problem IDs; it does not create accounts. An existing `.env.local` takes precedence over `.env`.
 
-## Verify and measure
+For local checks, run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build`. For a production run, build first, then use `npm start`.
 
-```bash
-npm run typecheck
-npm run lint
-npm test
-npm run test:coverage
-npm run build
+## Environment variables
+
+Copy [.env.example](.env.example) to `.env`. Set production values in Render's environment settings. Never commit credentials.
+
+| Name                     | Required       | Description                                                                                                                   |
+| ------------------------ | -------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `MONGODB_URI`            | Yes            | MongoDB connection URI; local default is `mongodb://localhost:27017/codenest`.                                                |
+| `REDIS_URL`              | Yes            | Redis TCP URI: `redis://` locally or `rediss://` for TLS services such as Upstash.                                            |
+| `NEXTAUTH_SECRET`        | Yes            | Session secret, at least 32 characters.                                                                                       |
+| `INVITE_TOKEN_SECRET`    | Yes            | Invite-signing secret, at least 32 characters and different from `NEXTAUTH_SECRET`.                                           |
+| `NEXTAUTH_URL`           | Yes            | Public app URL used for authentication, invite links and replay links; local value is `http://localhost:3000`.                |
+| `NEXT_PUBLIC_APP_URL`    | For deployment | Browser Socket.io server URL; defaults to `http://localhost:3000` if unset. Set before building for deployment.               |
+| `GEMINI_API_KEY`         | For AI         | Gemini API key. Unset or blank disables AI availability; hint/review requests return an unavailable error.                    |
+| `GEMINI_MODEL`           | No             | Model ID; defaults to `gemini-2.5-flash`.                                                                                     |
+| `SOCKET_ALLOWED_ORIGINS` | No             | Comma-separated exact origins; defaults to the origin of `NEXTAUTH_URL`. Replace the example localhost origin for deployment. |
+| `NODE_ENV`               | No             | Defaults to `development`; `npm start` sets `production`.                                                                     |
+| `PORT`                   | No             | HTTP and Socket.io listening port; defaults to `3000`.                                                                        |
+
+`NEXT_PRIVATE_DISABLE_TURBOPACK` is set internally by `server.js` and needs no manual configuration.
+
+## API reference
+
+Requests that carry JSON require `Content-Type: application/json`. Protected routes use the NextAuth session cookie. Room IDs are eight lowercase letters/digits; problem IDs are MongoDB ObjectIds.
+
+| Path                         | Methods   | Access                                        | Purpose                                                                                     |
+| ---------------------------- | --------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `/api/auth/[...nextauth]`    | GET, POST | NextAuth protocol                             | Credentials sign-in, session and sign-out endpoints.                                        |
+| `/api/auth/register`         | POST      | Public                                        | Register with `name`, `email` and `password` (8–72 bytes; minimum 8 characters).            |
+| `/api/rooms`                 | GET       | Signed in                                     | List up to 50 rooms created by the current user, newest first.                              |
+| `/api/rooms`                 | POST      | Signed in                                     | Create a room; return `roomId`, `title`, `inviteLink` and `inviteToken`.                    |
+| `/api/rooms/[roomId]`        | GET       | Creator or assigned candidate                 | Read room details; `?snapshots=true` includes ordered replay snapshots.                     |
+| `/api/rooms/[roomId]`        | PATCH     | Creator; candidate for integrity reports only | Update room settings or submit optional integrity events.                                   |
+| `/api/rooms/[roomId]`        | DELETE    | Creator                                       | Delete a non-active room and revoke its current invite.                                     |
+| `/api/rooms/[roomId]/invite` | GET       | Creator                                       | Retrieve the invite link; refresh expired tokens; reject ended rooms.                       |
+| `/api/problems`              | GET       | Public                                        | Search with `difficulty`, `tag`, `search` and `page`; 20 results per page.                  |
+| `/api/problems/[id]`         | GET       | Public                                        | Get problem details and starter code, excluding hidden test cases.                          |
+| `/api/problems/[id]/grade`   | POST      | Signed in                                     | Grade `{ code, language }` against stored cases; redact hidden-case inputs and outputs.     |
+| `/api/execute`               | POST      | Signed in                                     | Execute `{ code, language, testCases? }`; return `{ result }`.                              |
+| `/api/ai/hint`               | POST      | Assigned candidate present in the room        | Accept `{ roomId }`; use stored code/problem and enforce hint limits.                       |
+| `/api/ai/review`             | POST      | Creator                                       | Accept `roomId`, problem text, code, language and test results; generate and save a review. |
+| `/api/health`                | GET       | Public                                        | Ping MongoDB and Redis; return health flags, process uptime and timestamp.                  |
+
+Execution accepts `javascript`, `typescript`, `python`, `java`, `cpp`, `c`, `go` and `rust`. Each test case has `input` and `expectedOutput`. Limits are 100,000 UTF-8 bytes of source, 16,000 bytes per input/expected output, 20 cases and a shared 20-second execution deadline.
+
+Stored-case grading requires a complete program that reads stdin and prints its result. Comparison trims outer whitespace; hidden results expose only case index, hidden status and pass/fail. Problems without cases return HTTP 400. Execution provider failures appear in `result.errorCode`; grading provider failures return HTTP 503.
+
+Integrity reports use `{ integrityEvents: [{ type: "tab-switch" }] }` on the room PATCH route. Supported types are `tab-switch` and `large-paste` (with optional `size`); the server supplies actor and timestamp. These optional reports are not automatically collected by the current UI.
+
+## Socket events
+
+Socket.io uses `/socket.io` on the same server, with session-cookie authentication and an origin allowlist. After `join-room`, room events require authenticated membership; active-room events reject ended rooms. Every client event below includes `roomId`.
+
+| Client event                      | Role                         | Additional payload                 | Server response / effect                                                                                            |
+| --------------------------------- | ---------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `join-room`                       | Creator or invited candidate | `inviteToken` for candidate        | `room-state`, optional `problem-updated`; peers receive `user-joined`.                                              |
+| `code-change`                     | Current editor controller    | `code`                             | Persist code; peers receive `code-update`. A locked candidate cannot edit.                                          |
+| `language-change`                 | Either member                | `language`                         | Persist language; broadcast `language-update`.                                                                      |
+| `test-cases-change`               | Either member                | `testCases`                        | Persist cases; peers receive `test-cases-update`.                                                                   |
+| `output-update`                   | Either member                | `output`                           | Broadcast `output-result` and save an execution snapshot.                                                           |
+| `notes-change`                    | Either member                | `notes`                            | Persist notes; peers receive `notes-update`.                                                                        |
+| `editor-lock` / `editor-unlock`   | Interviewer                  | None                               | Broadcast `editor-locked` / `editor-unlocked`.                                                                      |
+| `take-control` / `return-control` | Interviewer                  | None                               | Broadcast `control-changed` with `controlledBy`.                                                                    |
+| `hint-used`                       | Either member                | None                               | Sync that user's server-stored count/text via `hint-count-update` and `hints-text-update`; does not consume a hint. |
+| `problem-change`                  | Interviewer                  | `problemId`                        | Load starter code; broadcast `problem-updated` without hidden cases.                                                |
+| `timer-start`                     | Interviewer                  | `durationMinutes` (1–240)          | Broadcast `timer-synced` with start time and duration.                                                              |
+| `interview-end`                   | Interviewer                  | None                               | Save final snapshot, revoke invite and broadcast `interview-ended` with `replayLink`.                               |
+| `integrity-event`                 | Either member                | `event: { type, size? }`           | Save an optional report with authenticated actor and server time.                                                   |
+| `cursor-move`                     | Either member                | `position: { lineNumber, column }` | Peers receive `cursor-update`.                                                                                      |
+
+The server also emits `error`, `invite-invalid` and `room-full` for failed access or validation. On disconnect, peers receive `user-left`. Active rooms save automatic snapshots every 60 seconds; replay steps through those snapshots rather than individual keystrokes.
+
+## Project structure
+
+```text
+CodeNest/
+├── .github/workflows/ci.yml       # Checks, coverage and container verification
+├── docs/
+│   ├── images/                   # Existing project images
+│   ├── screenshots/              # README screenshot paths
+│   ├── coverage.svg              # Recorded coverage badge
+│   └── RESUME.md                 # Measurements and methodology
+├── public/logo.svg
+├── scripts/                      # Problem seed data and execution benchmark
+├── server/                       # Socket handlers, access rules and shared helpers
+├── src/
+│   ├── app/
+│   │   ├── api/                  # Auth, rooms, problems, execution, AI and health
+│   │   ├── dashboard/            # Interviewer room list
+│   │   ├── room/[roomId]/        # Live room and replay/page.tsx
+│   │   └── ...                   # Landing, login, schedule and access-error pages
+│   ├── components/               # Editor, room, shared UI and command palette
+│   ├── lib/                      # Service clients, validation, auth and models
+│   ├── styles/                   # Monaco editor themes
+│   └── types/                    # Shared TypeScript types
+├── tests/                        # Unit, API and socket integration tests
+├── server.js                     # Custom Next.js + Socket.io entry point
+├── docker-compose.yml            # App, MongoDB and Redis services
+├── Dockerfile
+└── render.yaml                   # Render Node service blueprint
 ```
-
-Typecheck generates Next.js route types first. The production build uses tsconfig.build.json so test-only packages are not needed by a production-only install; CI runs lint and the full test typecheck separately. Tests mock MongoDB, Redis, and external providers, while socket integration tests use actual local Socket.io connections.
-
-Coverage artifacts are uploaded by CI. The checked-in badge records 79.82% backend line coverage; see [measured results and methodology](./docs/RESUME.md). To retry the live execution measurement, run `npx tsx scripts/benchmark-execution.ts`. This sends only the fixed sample program to Wandbox and saves results under the ignored coverage directory.
 
 ## Deployment
 
-### Render
+The [live CodeNest service](https://codenest-0xae.onrender.com) runs on Render. [render.yaml](render.yaml) defines the Node service configuration:
 
-Connect this repository as a Node web service. Use `npm ci --include=dev && npm run build` as the build command, `npm start` as the start command, and `/api/health` as the health path. The [Render blueprint](./render.yaml) records this configuration. Existing manually configured services must have their dashboard commands updated separately.
+| Setting           | Value                                   |
+| ----------------- | --------------------------------------- |
+| Node version      | `22.x` from `package.json`              |
+| Build command     | `npm ci --include=dev && npm run build` |
+| Start command     | `npm start`                             |
+| Health-check path | `/api/health`                           |
 
-The existing Render installation omits development dependencies before building. TypeScript (required for Next.js to read path aliases), type declarations, Tailwind, PostCSS, and Autoprefixer therefore remain in dependencies for compatibility with that installation. The custom Socket.io server runs in both development and production.
+Set production database URLs and secrets in Render. Set both app URLs to `https://codenest-0xae.onrender.com` for this deployment, and update or remove the example localhost `SOCKET_ALLOWED_ORIGINS`. Use a TLS `rediss://` connection URL for Upstash. Configure `NEXT_PUBLIC_APP_URL` before building because the browser uses its compiled value. Manually configured Render services need the same commands set in the dashboard.
 
-Set production MongoDB and Redis URLs, distinct auth/invite secrets, NEXTAUTH_URL, and NEXT_PUBLIC_APP_URL. Use the actual public HTTPS origin for the URLs. SOCKET_ALLOWED_ORIGINS optionally supplies comma-separated exact origins; it otherwise follows NEXTAUTH_URL. Set GEMINI_API_KEY only when AI access is desired.
+For UptimeRobot, use an HTTP(s) monitor targeting [https://codenest-0xae.onrender.com/api/health](https://codenest-0xae.onrender.com/api/health). This uncached endpoint returns HTTP 200 when both database pings succeed, or HTTP 503 when either fails; its JSON includes `status`, `mongo`, `redis`, `uptime` (seconds) and `timestamp`.
 
-### Docker Compose
-
-After filling .env with your own secrets:
-
-```bash
-docker compose up --build -d
-npm run seed
-```
-
-Compose runs app, MongoDB, and Redis with health checks and persistent data volumes. The app image runs as a non-root user. MongoDB and Redis host ports bind only to localhost; the app uses their internal container addresses. The host-side seed command uses the localhost database settings in .env. For a public deployment, set matching public app URLs before building. The health endpoint checks MongoDB ping, Redis ping, and process uptime, returning HTTP 503 when a dependency is unavailable.
-
-## Security and data behavior
-
-- Socket roles come from authenticated ownership and verified invite claims. Every room event checks membership in that room; candidate payload roles have no authority.
-- Invites expire after 24 hours, bind to one room and candidate identity, and support reconnect by that identity. Redis records consumption and revocation; ending or deleting a room revokes its current invite. The interviewer invite endpoint refreshes expired invites.
-- Redis limits logins, execution, AI, room requests, and socket code updates. Source is capped at 100 KB, stdin at 16 KB, and execution at a shared 20-second deadline with bounded retries. JSON requests are capped at 256 KB and grading at 20 cases.
-- Zod validates API and socket inputs. Headers restrict framing, content sniffing, and unnecessary browser permissions; Socket.io uses an exact origin allowlist.
-- Candidate code, descriptions, and test output are bounded and delimited as untrusted AI data. Review structure and recommendation are validated; AI reviews remain advisory.
-- Finished room documents and cached room state expire after 90 days. Integrity events are optional client reports, not independent proof of behavior; no additional UI tracking was added.
-
-## API
-
-| Path                       | Methods            | Purpose                                                           |
-| -------------------------- | ------------------ | ----------------------------------------------------------------- |
-| /api/auth/[...nextauth]    | GET, POST          | NextAuth session protocol and login                               |
-| /api/auth/register         | POST               | Register an account                                               |
-| /api/rooms                 | GET, POST          | Creator room list and room creation                               |
-| /api/rooms/[roomId]        | GET, PATCH, DELETE | Authorized details, settings, optional integrity reports, cleanup |
-| /api/rooms/[roomId]/invite | GET                | Creator invite retrieval and expiry refresh                       |
-| /api/problems              | GET                | Paginated, validated problem search                               |
-| /api/problems/[id]         | GET                | Public cases and starter code                                     |
-| /api/problems/[id]/grade   | POST               | Server-side grading with hidden-case redaction                    |
-| /api/execute               | POST               | Existing execution result envelope                                |
-| /api/ai/hint               | POST               | Assigned candidate hints with server quota                        |
-| /api/ai/review             | POST               | Interviewer review generation and persistence                     |
-| /api/health                | GET                | Dependency health and uptime                                      |
-
-Grading accepts `{ "code": "...", "language": "javascript" }`. Supply a complete program that reads each case from stdin and prints its result; output comparison trims outer whitespace. Hidden results expose only index, hidden status, and pass/fail. Optional integrity input is `{ "integrityEvents": [{ "type": "tab-switch" }] }` on the room PATCH API, or `integrity-event` with `{ roomId, event: { type: "large-paste", size: 500 } }`. Caller-provided actor and timestamps are discarded.
-
-## Screenshots
-
-![CodeNest home page](./docs/images/homepage.png)
-![CodeNest interview room](./docs/images/interview-room.png)
-
-TODO: Capture a current dashboard screenshot after verifying the deployment.
-
-TODO: Capture a current replay screenshot; retain the existing UI.
+For the full local container stack, fill `.env`, run `docker compose up --build -d`, then `npm run seed` from the host. Compose supplies internal database URLs to the app, health checks and persistent volumes; database host ports bind to localhost.
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](LICENSE)
