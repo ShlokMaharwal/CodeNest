@@ -1,3 +1,11 @@
+import { limitRequest } from '@/lib/rate-limit'
+import { roomQuerySchema } from '@/lib/schemas'
+import { roomIdSchema } from '@/lib/schemas'
+import { readJSON, inputErrorResponse } from '@/lib/api'
+import { roomPatchSchema } from '@/lib/schemas'
+import { revokeInvite } from '../../../../../server/invites'
+import { redis } from '@/lib/redis'
+import { env } from '@/lib/env'
 import { authOptions } from '@/lib/auth'
 import { RoomModel } from '@/lib/models/Room'
 import { SnapshotModel } from '@/lib/models/Snapshot'
@@ -12,7 +20,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ room
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const limited = await limitRequest('room:' + session.user.email, 60, 60)
+    if (limited) return limited
     const { roomId } = await params
+    roomIdSchema.parse(roomId)
     await connectDB()
 
     const room = await RoomModel.findOne({ roomId }).lean()
@@ -20,8 +31,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ room
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })
     }
 
+    if (
+      (room as any).createdBy !== session.user.email &&
+      (room as any).candidateEmail !== session.user.email
+    ) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    delete (room as any).inviteToken
     const { searchParams } = new URL(req.url)
-    const includeSnapshots = searchParams.get('snapshots') === 'true'
+    const query = roomQuerySchema.parse(Object.fromEntries(searchParams))
+    const includeSnapshots = query.snapshots === 'true'
 
     let snapshots = null
     if (includeSnapshots) {
@@ -30,6 +49,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ room
 
     return NextResponse.json({ room, snapshots })
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[GET /api/rooms/[roomId]]', err)
     return NextResponse.json({ error: 'Failed to fetch room' }, { status: 500 })
   }
@@ -42,7 +63,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const limited = await limitRequest('room:' + session.user.email, 60, 60)
+    if (limited) return limited
     const { roomId } = await params
+    roomIdSchema.parse(roomId)
     await connectDB()
 
     const room = await RoomModel.findOne({ roomId })
@@ -54,7 +78,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const body = await req.json()
+    const body = await readJSON(req, roomPatchSchema)
     const {
       title,
       candidateName,
@@ -97,6 +121,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
 
     return NextResponse.json({ room: updated })
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[PATCH /api/rooms/[roomId]]', err)
     return NextResponse.json({ error: 'Failed to update room' }, { status: 500 })
   }
@@ -112,7 +138,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const limited = await limitRequest('room:' + session.user.email, 60, 60)
+    if (limited) return limited
     const { roomId } = await params
+    roomIdSchema.parse(roomId)
     await connectDB()
 
     const room = await RoomModel.findOne({ roomId })
@@ -128,10 +157,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'Cannot delete an active room' }, { status: 400 })
     }
 
+    await revokeInvite(redis, room.inviteToken, env.INVITE_TOKEN_SECRET)
     await RoomModel.deleteOne({ roomId })
 
     return NextResponse.json({ success: true })
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[DELETE /api/rooms/[roomId]]', err)
     return NextResponse.json({ error: 'Failed to delete room' }, { status: 500 })
   }

@@ -1,3 +1,5 @@
+import { readJSON, inputErrorResponse } from '@/lib/api'
+import { registerSchema } from '@/lib/schemas'
 import { UserModel } from '@/lib/models/User'
 import { connectDB } from '@/lib/mongodb'
 import bcrypt from 'bcryptjs'
@@ -5,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json()
+    const { name, email, password } = await readJSON(req, registerSchema)
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: 'Name, email, and password are required' }, { status: 400 })
@@ -34,6 +36,8 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     )
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[POST /api/auth/register]', err)
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }

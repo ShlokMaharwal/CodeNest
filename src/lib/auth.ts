@@ -1,3 +1,6 @@
+import { credentialsSchema } from './schemas'
+import { redis } from './redis'
+import { consumeRateLimit } from '../../server/rate-limit'
 import { env } from './env'
 import bcrypt from 'bcryptjs'
 import { NextAuthOptions } from 'next-auth'
@@ -14,10 +17,15 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        const parsed = credentialsSchema.safeParse(credentials)
+        if (!parsed.success) return null
+        credentials = parsed.data
 
+        const normalizedEmail = credentials.email.trim().toLowerCase()
+        if (!(await consumeRateLimit(redis, 'ratelimit:login:' + normalizedEmail, 10, 900)).allowed)
+          return null
         await connectDB()
-        const user = await UserModel.findOne({ email: credentials.email })
+        const user = await UserModel.findOne({ email: normalizedEmail })
         if (!user) return null
 
         const isValid = await bcrypt.compare(credentials.password, user.password)

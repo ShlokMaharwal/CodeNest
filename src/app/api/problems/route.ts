@@ -1,3 +1,5 @@
+import { problemsQuerySchema, escapeRegex } from '@/lib/schemas'
+import { inputErrorResponse } from '@/lib/api'
 import { ProblemModel } from '@/lib/models/Problem'
 import { connectDB } from '@/lib/mongodb'
 import { NextRequest, NextResponse } from 'next/server'
@@ -7,10 +9,13 @@ export async function GET(req: NextRequest) {
     await connectDB()
 
     const { searchParams } = new URL(req.url)
-    const difficulty = searchParams.get('difficulty')
-    const tag = searchParams.get('tag')
-    const search = searchParams.get('search')
-    const page = parseInt(searchParams.get('page') || '1')
+    const {
+      difficulty,
+      tag,
+      search: rawSearch,
+      page,
+    } = problemsQuerySchema.parse(Object.fromEntries(searchParams))
+    const search = rawSearch ? escapeRegex(rawSearch) : undefined
     const limit = 20
 
     const query: any = {}
@@ -47,6 +52,8 @@ export async function GET(req: NextRequest) {
       pages: Math.ceil(total / limit),
     })
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[GET /api/problems]', err)
     return NextResponse.json({ error: 'Failed to fetch problems' }, { status: 500 })
   }

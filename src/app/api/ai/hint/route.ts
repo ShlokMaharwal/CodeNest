@@ -1,52 +1,75 @@
-import { authOptions } from '@/lib/auth'
-import { buildHintPrompt, callGemini } from '@/lib/gemini'
-import { incrementWithTTL } from '@/lib/redis'
-import { getServerSession } from 'next-auth'
+import { readJSON, inputErrorResponse } from '@/lib/api'
+import { hintSchema } from '@/lib/schemas'
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { callGemini, buildHintPrompt } from '@/lib/gemini'
+import { redis, getJSON, incrementWithTTL } from '@/lib/redis'
+import { connectDB } from '@/lib/mongodb'
+import { RoomModel } from '@/lib/models/Room'
+import { ProblemModel } from '@/lib/models/Problem'
+import { LiveRoomState } from '@/types'
+import { reserveHint, releaseHint, saveHint } from '../../../../../server/hints'
 
 export async function POST(req: NextRequest) {
+  let reserved: { roomId: string; email: string } | undefined
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const {
-      problemTitle = 'Coding Problem',
-      problemDescription = '',
-      code = '',
-      language = 'javascript',
-      hintsUsed = 0,
-      maxHints = 5,
-    } = await req.json()
-
-    if (hintsUsed >= maxHints) {
-      return NextResponse.json({ error: `Maximum ${maxHints} hints reached` }, { status: 429 })
-    }
-
-    const rateLimitKey = `ratelimit:hint:${session.user.email}`
-    const count = await incrementWithTTL(rateLimitKey, 60 * 60)
-    if (count > 10) {
+    if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const parsed = hintSchema.safeParse(await readJSON(req, hintSchema))
+    if (!parsed.success)
+      return NextResponse.json({ error: 'Invalid hint request' }, { status: 400 })
+    const { roomId } = parsed.data
+    const email = session.user.email
+    if ((await incrementWithTTL('ratelimit:hint:' + email, 3600)) > 10) {
       return NextResponse.json({ error: 'Too many hints. Try again later.' }, { status: 429 })
     }
-
-    const prompt = buildHintPrompt({ problemTitle, problemDescription, code, language, hintsUsed })
-    const hint = await callGemini(prompt)
-
-    return NextResponse.json({ hint })
-  } catch (err: any) {
-    console.error('[POST /api/ai/hint]', err)
-    if (err?.status === 429 || err?.message?.includes('429') || err?.message?.includes('quota')) {
-      return NextResponse.json(
-        { error: 'AI service is temporarily rate limited. Please wait a moment and try again.' },
-        { status: 503 },
-      )
+    await connectDB()
+    const room = await RoomModel.findOne({ roomId })
+    const state = await getJSON<LiveRoomState>('room:' + roomId)
+    if (
+      !room ||
+      !state ||
+      room.candidateEmail !== email ||
+      !state.users.some((user) => user.email === email && user.role === 'candidate')
+    ) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+    if (room.status === 'ended' || !room.hintsEnabled)
+      return NextResponse.json({ error: 'Hints unavailable' }, { status: 403 })
+    const count = await reserveHint(
+      redis,
+      roomId,
+      email,
+      room.maxHints,
+      state.hintsPerCandidate?.[email] || 0,
+    )
+    if (count < 0)
+      return NextResponse.json(
+        { error: 'Maximum ' + room.maxHints + ' hints reached' },
+        { status: 429 },
+      )
+    reserved = { roomId, email }
+    // The authoritative source is the room state, never client counters or code.
+    const problem = room.problemId ? await ProblemModel.findById(room.problemId) : null
+    const hint = await callGemini(
+      buildHintPrompt({
+        problemTitle: problem?.title || room.title,
+        problemDescription: problem?.description || '',
+        code: state.code,
+        language: state.language,
+        hintsUsed: count - 1,
+      }),
+    )
+    await saveHint(redis, roomId, email, hint)
+    reserved = undefined
+    return NextResponse.json({ hint })
+  } catch (error) {
+    const invalid = inputErrorResponse(error)
+    if (invalid) return invalid
+    if (reserved) await releaseHint(redis, reserved.roomId, reserved.email).catch(() => {})
     return NextResponse.json(
-      {
-        error:
-          'AI service is currently experiencing high demand or is temporarily unavailable. Please try again in a few seconds.',
-      },
+      { error: 'AI service is temporarily unavailable. Please try again.' },
       { status: 503 },
     )
   }

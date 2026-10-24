@@ -1,26 +1,9 @@
 import { env } from './env'
-import jwt from 'jsonwebtoken'
-
-const SECRET = env.INVITE_TOKEN_SECRET!
-const EXPIRY = '24h'
-
-export interface InvitePayload {
-  roomId: string
-  role: 'candidate'
-}
+import { signInvite, verifyInvite } from '../../server/invites'
 
 export function signInviteToken(roomId: string): string {
-  if (!SECRET) throw new Error('INVITE_TOKEN_SECRET is not set')
-  const payload: InvitePayload = { roomId, role: 'candidate' }
-  return jwt.sign(payload, SECRET, { expiresIn: EXPIRY })
+  return signInvite(roomId, env.INVITE_TOKEN_SECRET)
 }
-
-export function verifyInviteToken(token: string): InvitePayload | null {
-  if (!SECRET) return null
-  try {
-    const payload = jwt.verify(token, SECRET) as InvitePayload
-    return payload
-  } catch {
-    return null
-  }
+export function verifyInviteToken(token: string, roomId?: string) {
+  return verifyInvite(token, env.INVITE_TOKEN_SECRET, roomId)
 }

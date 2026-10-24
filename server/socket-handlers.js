@@ -1,3 +1,8 @@
+const { validateSocketInput } = require('./socket-schemas')
+const mongoose = require('mongoose')
+const { consumeRateLimit } = require('./rate-limit')
+const { consumeInvite, revokeInvite } = require('./invites')
+const { getCandidateHints } = require('./hints')
 const { authorizeEvent } = require('./socket-policy')
 
 function registerSocketHandlers(io, dependencies) {
@@ -23,8 +28,11 @@ function registerSocketHandlers(io, dependencies) {
       }))
 
       // Sum hint usage across all candidates (hintsUsed is not a top-level field in Redis state)
-      const hintsPerCandidate = state.hintsPerCandidate || {}
-      const hintsUsed = Object.values(hintsPerCandidate).reduce((sum, n) => sum + (n || 0), 0)
+      const storedCounts = await redis.hgetall('room:' + roomId + ':hints')
+      const hintsPerCandidate = Object.keys(storedCounts).length
+        ? storedCounts
+        : state.hintsPerCandidate || {}
+      const hintsUsed = Object.values(hintsPerCandidate).reduce((sum, n) => sum + Number(n || 0), 0)
 
       await SnapshotModel.create({
         roomId,
@@ -69,6 +77,10 @@ function registerSocketHandlers(io, dependencies) {
       socket.on(event, async (payload) => {
         try {
           if (event !== 'disconnect') {
+            if (!validateSocketInput(event, payload).success) {
+              socket.emit('error', { message: 'Invalid event data' })
+              return
+            }
             if (
               !payload ||
               typeof payload.roomId !== 'string' ||
@@ -78,6 +90,22 @@ function registerSocketHandlers(io, dependencies) {
               return
             }
             if (event !== 'join-room') {
+              if (
+                event === 'code-change' &&
+                (typeof payload.code !== 'string' ||
+                  Buffer.byteLength(payload.code) > 100000 ||
+                  !(
+                    await consumeRateLimit(
+                      redis,
+                      'ratelimit:socket:' + payload.roomId + ':' + user.email,
+                      50,
+                      1,
+                    )
+                  ).allowed)
+              ) {
+                socket.emit('error', { message: 'Code update limit exceeded' })
+                return
+              }
               const state = await getRoomState(payload.roomId)
               if (!authorizeEvent(socket, event, payload, state)) {
                 socket.emit('error', { message: 'Forbidden' })
@@ -129,12 +157,10 @@ function registerSocketHandlers(io, dependencies) {
             socket.disconnect()
             return
           }
-          const jwt = require('jsonwebtoken')
-          try {
-            const payload = jwt.verify(inviteToken, env.INVITE_TOKEN_SECRET)
-            if (payload.roomId !== roomId || payload.role !== 'candidate')
-              throw new Error('Invalid invite claims')
-          } catch {
+          if (
+            inviteToken !== room.inviteToken ||
+            !(await consumeInvite(redis, inviteToken, roomId, user.email, env.INVITE_TOKEN_SECRET))
+          ) {
             socket.emit('invite-invalid')
             socket.disconnect()
             return
@@ -177,11 +203,16 @@ function registerSocketHandlers(io, dependencies) {
         socket.data.roomId = roomId
         socket.data.role = role
 
-        const myHintsUsed =
-          role === 'candidate' ? (state.hintsPerCandidate || {})[user.email] || 0 : 0
-        const myHintTexts =
-          role === 'candidate' ? (state.hintsTextPerCandidate || {})[user.email] || [] : []
-        socket.emit('room-state', { ...state, myRole: role, hintsUsed: myHintsUsed, myHintTexts })
+        const personal =
+          role === 'candidate'
+            ? await getCandidateHints(redis, roomId, user.email, state)
+            : { count: 0, texts: [] }
+        socket.emit('room-state', {
+          ...state,
+          myRole: role,
+          hintsUsed: personal.count,
+          myHintTexts: personal.texts,
+        })
 
         socket.to(roomId).emit('user-joined', {
           user: activeUser,
@@ -292,33 +323,25 @@ function registerSocketHandlers(io, dependencies) {
       io.to(roomId).emit('control-changed', { controlledBy: 'candidate' })
     })
 
-    on('hint-used', async ({ roomId, hintText }) => {
-      const state = await getRoomState(roomId)
-      if (!state) return
-
-      const email = socket.data.user?.email
-
-      if (!state.hintsPerCandidate) state.hintsPerCandidate = {}
-      if (email) {
-        state.hintsPerCandidate[email] = (state.hintsPerCandidate[email] || 0) + 1
-      }
-
-      // Persist hint text so it can be restored on refresh
-      if (!state.hintsTextPerCandidate) state.hintsTextPerCandidate = {}
-      if (email && hintText) {
-        if (!state.hintsTextPerCandidate[email]) state.hintsTextPerCandidate[email] = []
-        state.hintsTextPerCandidate[email].push(hintText)
-      }
-
-      await setRoomState(roomId, state)
-
-      const personalCount = email ? state.hintsPerCandidate[email] || 0 : 0
-      const personalHints = email ? state.hintsTextPerCandidate?.[email] || [] : []
-      socket.emit('hint-count-update', { hintsUsed: personalCount })
-      socket.emit('hints-text-update', { hints: personalHints })
+    on('hint-used', async ({ roomId }) => {
+      const personal = await getCandidateHints(
+        redis,
+        roomId,
+        socket.data.user.email,
+        await getRoomState(roomId),
+      )
+      socket.emit('hint-count-update', { hintsUsed: personal.count })
+      socket.emit('hints-text-update', { hints: personal.texts })
     })
 
-    on('problem-change', async ({ roomId, problemId, problem }) => {
+    on('problem-change', async ({ roomId, problemId }) => {
+      const problem = await RoomModel.db
+        .collection('problems')
+        .findOne({ _id: new mongoose.Types.ObjectId(problemId) })
+      if (!problem) {
+        socket.emit('error', { message: 'Problem not found' })
+        return
+      }
       if (socket.data.role !== 'interviewer') return
       const state = await getRoomState(roomId)
       if (!state) return
@@ -329,7 +352,13 @@ function registerSocketHandlers(io, dependencies) {
 
       await RoomModel.findOneAndUpdate({ roomId }, { problemId })
 
-      io.to(roomId).emit('problem-updated', { problem, code: state.code })
+      io.to(roomId).emit('problem-updated', {
+        problem: {
+          ...problem,
+          testCases: (problem.testCases || []).filter((test) => !test.isHidden),
+        },
+        code: state.code,
+      })
     })
 
     on('timer-start', async ({ roomId, durationMinutes }) => {
@@ -353,6 +382,11 @@ function registerSocketHandlers(io, dependencies) {
         const state = await getRoomState(roomId)
         if (!state) return
 
+        await revokeInvite(
+          redis,
+          (await RoomModel.findOne({ roomId })).inviteToken,
+          env.INVITE_TOKEN_SECRET,
+        )
         state.status = 'ended'
         await setRoomState(roomId, state)
 

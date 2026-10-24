@@ -1,3 +1,7 @@
+import { RoomModel } from '@/lib/models/Room'
+import { readJSON, inputErrorResponse } from '@/lib/api'
+import { reviewInputSchema } from '@/lib/schemas'
+import { limitRequest } from '@/lib/rate-limit'
 import { authOptions } from '@/lib/auth'
 import { buildReviewPrompt, callGemini } from '@/lib/gemini'
 import { SnapshotModel } from '@/lib/models/Snapshot'
@@ -12,6 +16,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const limited = await limitRequest('ai-review:' + session.user.email, 5, 60)
+    if (limited) return limited
     const {
       roomId,
       problemTitle = 'Coding Problem',
@@ -19,8 +25,12 @@ export async function POST(req: NextRequest) {
       code = '',
       language = 'javascript',
       testResults = [],
-    } = await req.json()
+    } = await readJSON(req, reviewInputSchema)
 
+    await connectDB()
+    const room = await RoomModel.findOne({ roomId })
+    if (!room || room.createdBy !== session.user.email)
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     const prompt = buildReviewPrompt({
       problemTitle,
       problemDescription,
@@ -45,6 +55,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ review })
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[POST /api/ai/review]', err)
     return NextResponse.json(
       { error: 'Failed to generate review. Please try again.' },

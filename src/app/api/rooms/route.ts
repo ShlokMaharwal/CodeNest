@@ -1,3 +1,6 @@
+import { readJSON, inputErrorResponse } from '@/lib/api'
+import { roomCreateSchema } from '@/lib/schemas'
+import { limitRequest } from '@/lib/rate-limit'
 import { authOptions } from '@/lib/auth'
 import { signInviteToken } from '@/lib/invite'
 import { RoomModel } from '@/lib/models/Room'
@@ -19,7 +22,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json()
+    const limited = await limitRequest('rooms-create:' + session.user.email, 10, 60)
+    if (limited) return limited
+    const body = await readJSON(req, roomCreateSchema)
     const {
       title = 'Interview Session',
       problemId,
@@ -112,6 +117,8 @@ export async function POST(req: NextRequest) {
       { status: 201 },
     )
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[POST /api/rooms]', err)
     return NextResponse.json({ error: 'Failed to create room' }, { status: 500 })
   }
@@ -124,6 +131,8 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const limited = await limitRequest('rooms-list:' + session.user.email, 60, 60)
+    if (limited) return limited
     await connectDB()
     const rooms = await RoomModel.find({ createdBy: session.user.email })
       .sort({ createdAt: -1 })
@@ -132,6 +141,8 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json({ rooms })
   } catch (err: any) {
+    const invalid = inputErrorResponse(err)
+    if (invalid) return invalid
     console.error('[GET /api/rooms]', err)
     return NextResponse.json({ error: 'Failed to fetch rooms' }, { status: 500 })
   }
