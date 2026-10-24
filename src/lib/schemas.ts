@@ -1,3 +1,4 @@
+import { integrityBatchSchema } from '../../server/integrity'
 import { z } from 'zod'
 import { boundedText, language, executionInput } from '../../server/execution-input'
 
@@ -38,7 +39,10 @@ const roomFields = z.object({
   description: optionalText(10000),
 })
 export const roomCreateSchema = roomFields
-export const roomPatchSchema = roomFields.omit({ language: true, problemId: true }).strict()
+export const roomPatchSchema = roomFields
+  .omit({ language: true, problemId: true })
+  .extend({ integrityEvents: integrityBatchSchema.optional() })
+  .strict()
 export const problemsQuerySchema = z.object({
   difficulty: z.enum(['Easy', 'Medium', 'Hard']).optional(),
   tag: z.string().max(100).optional(),

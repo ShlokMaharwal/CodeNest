@@ -22,6 +22,7 @@ export interface IRoom extends Document {
   createdAt: Date
   expiresAt: Date
   endedAt?: Date
+  integrityEvents?: { type: string; size?: number; actor: string; timestamp: Date }[]
   aiReview?: string
   aiReviewData?: Record<string, string>
 }
@@ -48,6 +49,15 @@ const RoomSchema = new Schema<IRoom>({
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true },
   endedAt: { type: Date },
+  integrityEvents: [
+    {
+      _id: false,
+      type: { type: String, enum: ['tab-switch', 'large-paste'] },
+      size: Number,
+      actor: String,
+      timestamp: Date,
+    },
+  ],
   aiReview: { type: String },
   aiReviewData: { type: Schema.Types.Mixed },
 })

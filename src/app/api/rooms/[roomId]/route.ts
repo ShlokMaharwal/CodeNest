@@ -1,3 +1,4 @@
+import { recordIntegrity } from '../../../../../server/integrity'
 import { limitRequest } from '@/lib/rate-limit'
 import { roomQuerySchema } from '@/lib/schemas'
 import { roomIdSchema } from '@/lib/schemas'
@@ -74,11 +75,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
       return NextResponse.json({ error: 'Room not found' }, { status: 404 })
     }
 
-    if (room.createdBy !== session.user.email) {
+    const body = await readJSON(req, roomPatchSchema)
+    const onlyIntegrity = Object.keys(body).length === 1 && Boolean(body.integrityEvents)
+    if (
+      room.createdBy !== session.user.email &&
+      !(room.candidateEmail === session.user.email && onlyIntegrity)
+    ) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const body = await readJSON(req, roomPatchSchema)
     const {
       title,
       candidateName,
@@ -94,6 +99,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ro
       maxHints,
     } = body
 
+    if (body.integrityEvents)
+      await recordIntegrity(RoomModel, roomId, session.user.email, body.integrityEvents)
     const updates: Record<string, any> = {}
     if (title !== undefined) updates.title = title
     if (candidateName !== undefined) updates.candidateName = candidateName

@@ -1,3 +1,4 @@
+const { recordIntegrity } = require('./integrity')
 const { roomTTL, restoreRoomState, createRoomQueue } = require('./room-state')
 const { validateSocketInput } = require('./socket-schemas')
 const mongoose = require('mongoose')
@@ -430,6 +431,15 @@ function registerSocketHandlers(io, dependencies) {
       } catch (err) {
         console.error('[interview-end] Error:', err)
       }
+    })
+
+    on('integrity-event', async ({ roomId, event }) => {
+      if (
+        !(await consumeRateLimit(redis, 'ratelimit:integrity:' + roomId + ':' + user.email, 20, 60))
+          .allowed
+      )
+        return
+      await recordIntegrity(RoomModel, roomId, user.email, [event])
     })
 
     on('cursor-move', ({ roomId, position }) => {
