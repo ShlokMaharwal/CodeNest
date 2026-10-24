@@ -1,4 +1,11 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "tests", "vitest.config.ts"]
+  "exclude": ["node_modules", "tests", "vitest.config.ts"],
+  "compilerOptions": {
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  }
 }

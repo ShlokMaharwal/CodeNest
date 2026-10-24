@@ -1,3 +1,5 @@
+const { validateSocketInput } = require('./socket-schemas')
+const mongoose = require('mongoose')
 const { consumeRateLimit } = require('./rate-limit')
 const { consumeInvite, revokeInvite } = require('./invites')
 const { getCandidateHints } = require('./hints')
@@ -75,6 +77,10 @@ function registerSocketHandlers(io, dependencies) {
       socket.on(event, async (payload) => {
         try {
           if (event !== 'disconnect') {
+            if (!validateSocketInput(event, payload).success) {
+              socket.emit('error', { message: 'Invalid event data' })
+              return
+            }
             if (
               !payload ||
               typeof payload.roomId !== 'string' ||
@@ -328,7 +334,14 @@ function registerSocketHandlers(io, dependencies) {
       socket.emit('hints-text-update', { hints: personal.texts })
     })
 
-    on('problem-change', async ({ roomId, problemId, problem }) => {
+    on('problem-change', async ({ roomId, problemId }) => {
+      const problem = await RoomModel.db
+        .collection('problems')
+        .findOne({ _id: new mongoose.Types.ObjectId(problemId) })
+      if (!problem) {
+        socket.emit('error', { message: 'Problem not found' })
+        return
+      }
       if (socket.data.role !== 'interviewer') return
       const state = await getRoomState(roomId)
       if (!state) return
@@ -339,7 +352,13 @@ function registerSocketHandlers(io, dependencies) {
 
       await RoomModel.findOneAndUpdate({ roomId }, { problemId })
 
-      io.to(roomId).emit('problem-updated', { problem, code: state.code })
+      io.to(roomId).emit('problem-updated', {
+        problem: {
+          ...problem,
+          testCases: (problem.testCases || []).filter((test) => !test.isHidden),
+        },
+        code: state.code,
+      })
     })
 
     on('timer-start', async ({ roomId, durationMinutes }) => {

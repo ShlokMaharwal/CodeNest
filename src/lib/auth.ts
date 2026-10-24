@@ -1,3 +1,4 @@
+import { credentialsSchema } from './schemas'
 import { redis } from './redis'
 import { consumeRateLimit } from '../../server/rate-limit'
 import { env } from './env'
@@ -16,7 +17,9 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        const parsed = credentialsSchema.safeParse(credentials)
+        if (!parsed.success) return null
+        credentials = parsed.data
 
         const normalizedEmail = credentials.email.trim().toLowerCase()
         if (!(await consumeRateLimit(redis, 'ratelimit:login:' + normalizedEmail, 10, 900)).allowed)

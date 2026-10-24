@@ -8,7 +8,10 @@ const environmentSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-    MONGODB_URI: z.string().regex(/^mongodb(?:\+srv)?:\/\//),
+    MONGODB_URI: z
+      .string()
+      .url()
+      .regex(/^mongodb(?:\+srv)?:\/\//),
     REDIS_URL: z
       .string()
       .url()
@@ -17,6 +20,22 @@ const environmentSchema = z
     INVITE_TOKEN_SECRET: z.string().min(32),
     NEXTAUTH_URL: httpUrl,
     NEXT_PUBLIC_APP_URL: httpUrl.optional(),
+    SOCKET_ALLOWED_ORIGINS: z
+      .string()
+      .optional()
+      .refine(
+        (value) =>
+          !value ||
+          value.split(',').every((origin) => {
+            try {
+              const url = new URL(origin.trim())
+              return ['http:', 'https:'].includes(url.protocol) && url.origin === origin.trim()
+            } catch {
+              return false
+            }
+          }),
+        'Use comma-separated origins',
+      ),
     GEMINI_API_KEY: z.string().min(1).optional(),
   })
   .refine((value) => value.NEXTAUTH_SECRET !== value.INVITE_TOKEN_SECRET, {

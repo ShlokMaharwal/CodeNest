@@ -85,9 +85,12 @@ app.prepare().then(async () => {
     handle(req, res, parsedUrl)
   })
 
+  const { allowedOrigins, isAllowedOrigin } = require('./server/origins')
   const io = new Server(httpServer, {
+    maxHttpBufferSize: 256000,
+    allowRequest: (req, callback) => callback(null, isAllowedOrigin(req.headers.origin, env)),
     cors: {
-      origin: env.NEXTAUTH_URL,
+      origin: allowedOrigins(env),
       methods: ['GET', 'POST'],
     },
   })
