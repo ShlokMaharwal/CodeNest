@@ -36,7 +36,11 @@ const environmentSchema = z
           }),
         'Use comma-separated origins',
       ),
-    GEMINI_API_KEY: z.string().min(1).optional(),
+    GEMINI_MODEL: z.string().min(1).max(100).default('gemini-2.5-flash'),
+    GEMINI_API_KEY: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.string().min(1).optional(),
+    ),
   })
   .refine((value) => value.NEXTAUTH_SECRET !== value.INVITE_TOKEN_SECRET, {
     message: 'Use a separate secret for invite tokens',

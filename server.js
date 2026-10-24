@@ -35,6 +35,8 @@ const RoomSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   expiresAt: { type: Date, required: true },
   endedAt: { type: Date },
+  aiReview: { type: String },
+  aiReviewData: { type: mongoose.Schema.Types.Mixed },
 })
 RoomSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 })
 const RoomModel = mongoose.models.Room || mongoose.model('Room', RoomSchema)
