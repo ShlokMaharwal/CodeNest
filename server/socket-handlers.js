@@ -1,3 +1,4 @@
+const { getCandidateHints } = require('./hints')
 const { authorizeEvent } = require('./socket-policy')
 
 function registerSocketHandlers(io, dependencies) {
@@ -23,8 +24,11 @@ function registerSocketHandlers(io, dependencies) {
       }))
 
       // Sum hint usage across all candidates (hintsUsed is not a top-level field in Redis state)
-      const hintsPerCandidate = state.hintsPerCandidate || {}
-      const hintsUsed = Object.values(hintsPerCandidate).reduce((sum, n) => sum + (n || 0), 0)
+      const storedCounts = await redis.hgetall('room:' + roomId + ':hints')
+      const hintsPerCandidate = Object.keys(storedCounts).length
+        ? storedCounts
+        : state.hintsPerCandidate || {}
+      const hintsUsed = Object.values(hintsPerCandidate).reduce((sum, n) => sum + Number(n || 0), 0)
 
       await SnapshotModel.create({
         roomId,
@@ -177,11 +181,16 @@ function registerSocketHandlers(io, dependencies) {
         socket.data.roomId = roomId
         socket.data.role = role
 
-        const myHintsUsed =
-          role === 'candidate' ? (state.hintsPerCandidate || {})[user.email] || 0 : 0
-        const myHintTexts =
-          role === 'candidate' ? (state.hintsTextPerCandidate || {})[user.email] || [] : []
-        socket.emit('room-state', { ...state, myRole: role, hintsUsed: myHintsUsed, myHintTexts })
+        const personal =
+          role === 'candidate'
+            ? await getCandidateHints(redis, roomId, user.email, state)
+            : { count: 0, texts: [] }
+        socket.emit('room-state', {
+          ...state,
+          myRole: role,
+          hintsUsed: personal.count,
+          myHintTexts: personal.texts,
+        })
 
         socket.to(roomId).emit('user-joined', {
           user: activeUser,
@@ -292,30 +301,15 @@ function registerSocketHandlers(io, dependencies) {
       io.to(roomId).emit('control-changed', { controlledBy: 'candidate' })
     })
 
-    on('hint-used', async ({ roomId, hintText }) => {
-      const state = await getRoomState(roomId)
-      if (!state) return
-
-      const email = socket.data.user?.email
-
-      if (!state.hintsPerCandidate) state.hintsPerCandidate = {}
-      if (email) {
-        state.hintsPerCandidate[email] = (state.hintsPerCandidate[email] || 0) + 1
-      }
-
-      // Persist hint text so it can be restored on refresh
-      if (!state.hintsTextPerCandidate) state.hintsTextPerCandidate = {}
-      if (email && hintText) {
-        if (!state.hintsTextPerCandidate[email]) state.hintsTextPerCandidate[email] = []
-        state.hintsTextPerCandidate[email].push(hintText)
-      }
-
-      await setRoomState(roomId, state)
-
-      const personalCount = email ? state.hintsPerCandidate[email] || 0 : 0
-      const personalHints = email ? state.hintsTextPerCandidate?.[email] || [] : []
-      socket.emit('hint-count-update', { hintsUsed: personalCount })
-      socket.emit('hints-text-update', { hints: personalHints })
+    on('hint-used', async ({ roomId }) => {
+      const personal = await getCandidateHints(
+        redis,
+        roomId,
+        socket.data.user.email,
+        await getRoomState(roomId),
+      )
+      socket.emit('hint-count-update', { hintsUsed: personal.count })
+      socket.emit('hints-text-update', { hints: personal.texts })
     })
 
     on('problem-change', async ({ roomId, problemId, problem }) => {
