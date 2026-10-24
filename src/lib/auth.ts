@@ -1,3 +1,4 @@
+import { env } from './env'
 import bcrypt from 'bcryptjs'
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
@@ -52,5 +53,5 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
   },
   session: { strategy: 'jwt' },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: env.NEXTAUTH_SECRET,
 }

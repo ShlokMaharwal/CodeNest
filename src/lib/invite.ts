@@ -1,6 +1,7 @@
+import { env } from './env'
 import jwt from 'jsonwebtoken'
 
-const SECRET = process.env.INVITE_TOKEN_SECRET!
+const SECRET = env.INVITE_TOKEN_SECRET!
 const EXPIRY = '24h'
 
 export interface InvitePayload {

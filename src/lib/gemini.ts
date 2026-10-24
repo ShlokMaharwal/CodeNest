@@ -1,6 +1,7 @@
+import { env } from './env'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY || '')
 
 export async function callGemini(prompt: string): Promise<string> {
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })

@@ -1,7 +1,8 @@
+import { env } from './env'
 import Redis from 'ioredis'
 
 const getRedisUrl = () => {
-  const url = process.env.REDIS_URL
+  const url = env.REDIS_URL
   if (!url) {
     throw new Error('REDIS_URL environment variable is not defined')
   }
@@ -13,6 +14,7 @@ const globalForRedis = global as unknown as { redis: Redis }
 export const redis: Redis =
   globalForRedis.redis ||
   new Redis(getRedisUrl(), {
+    lazyConnect: true,
     maxRetriesPerRequest: 3,
     retryStrategy(times) {
       const delay = Math.min(times * 100, 3000)

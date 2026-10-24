@@ -2,6 +2,8 @@ process.env.NEXT_PRIVATE_DISABLE_TURBOPACK = '1'
 
 require('dotenv').config({ path: '.env.local' })
 require('dotenv').config({ path: '.env' })
+const { validateEnv } = require('./src/lib/env-schema')
+const env = validateEnv(process.env)
 
 const { createServer } = require('http')
 const { parse } = require('url')
@@ -62,7 +64,7 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+const redis = new Redis(env.REDIS_URL, {
   maxRetriesPerRequest: 3,
   retryStrategy: (times) => Math.min(times * 100, 3000),
 })
@@ -71,7 +73,7 @@ redis.on('error', (err) => console.error('[Redis] Error:', err.message))
 
 async function connectMongo() {
   if (mongoose.connection.readyState >= 1) return
-  await mongoose.connect(process.env.MONGODB_URI)
+  await mongoose.connect(env.MONGODB_URI)
   console.log('[MongoDB] Connected')
 }
 
@@ -146,7 +148,7 @@ app.prepare().then(async () => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.NEXTAUTH_URL || 'http://localhost:3000',
+      origin: env.NEXTAUTH_URL,
       methods: ['GET', 'POST'],
     },
   })
@@ -163,7 +165,7 @@ app.prepare().then(async () => {
 
       const token = await getToken({
         req,
-        secret: process.env.NEXTAUTH_SECRET,
+        secret: env.NEXTAUTH_SECRET,
       })
 
       if (!token) {
@@ -216,7 +218,7 @@ app.prepare().then(async () => {
           }
           const jwt = require('jsonwebtoken')
           try {
-            const payload = jwt.verify(inviteToken, process.env.INVITE_TOKEN_SECRET)
+            const payload = jwt.verify(inviteToken, env.INVITE_TOKEN_SECRET)
             if (payload.roomId !== roomId) throw new Error('Token room mismatch')
           } catch {
             socket.emit('invite-invalid')
@@ -451,7 +453,7 @@ app.prepare().then(async () => {
 
         stopAutoSnapshot(roomId)
 
-        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        const baseUrl = env.NEXTAUTH_URL
         const replayLink = `${baseUrl}/room/${roomId}/replay`
 
         io.to(roomId).emit('interview-ended', { replayLink })
@@ -494,7 +496,7 @@ app.prepare().then(async () => {
     })
   })
 
-  const PORT = process.env.PORT || 3000
+  const PORT = env.PORT
   httpServer.listen(PORT, () => {
     console.log(`\nCodeNest running on http://localhost:${PORT}`)
     console.log(`   WebSocket server active\n`)
