@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "cross-env NODE_ENV=production node server.js",
     "server": "node server.js",
-    "seed": "tsx scripts/seed-problems.ts"
+    "seed": "tsx scripts/seed-problems.ts",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -34,15 +38,20 @@
     "uuid": "^11.1.1"
   },
   "devDependencies": {
-    "tsx": "^4.23.15",
+    "@eslint/eslintrc": "^3.3.7",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.19",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^15.3.1",
     "postcss": "^8.4.38",
+    "prettier": "^3.9.10",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "tsx": "^4.23.15",
+    "typescript": "^5",
+    "typescript-eslint": "^8.72.0"
   }
 }
