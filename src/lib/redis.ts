@@ -16,6 +16,7 @@ export const redis: Redis =
   globalForRedis.redis ||
   new Redis(getRedisUrl(), {
     lazyConnect: true,
+    commandTimeout: 3000,
     maxRetriesPerRequest: 3,
     retryStrategy(times) {
       const delay = Math.min(times * 100, 3000)

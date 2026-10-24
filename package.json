@@ -13,7 +13,8 @@
     "format:check": "prettier --check .",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:socket": "vitest run tests/socket.integration.test.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

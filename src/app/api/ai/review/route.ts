@@ -1,5 +1,5 @@
 import { RoomModel } from '@/lib/models/Room'
-import { readJSON, inputErrorResponse } from '@/lib/api'
+import { readJSON, inputErrorResponse, InputError } from '@/lib/api'
 import { reviewInputSchema } from '@/lib/schemas'
 import { limitRequest } from '@/lib/rate-limit'
 import { authOptions } from '@/lib/auth'
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ review })
   } catch (err: any) {
-    const invalid = inputErrorResponse(err)
+    const invalid = err instanceof InputError ? inputErrorResponse(err) : null
     if (invalid) return invalid
     console.error('[POST /api/ai/review]', err)
     return NextResponse.json(

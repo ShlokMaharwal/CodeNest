@@ -2,7 +2,8 @@ import { executeCode } from './wandbox'
 import { ITestCase } from './models/Problem'
 
 export async function gradeSolution(code: string, language: string, cases: ITestCase[]) {
-  const limited = cases.slice(0, 20)
+  if (cases.length > 20) throw new Error('Problem exceeds the 20 case execution limit')
+  const limited = cases
   const result = await executeCode(code, language, limited, true)
   if (result.errorCode) throw new Error('Execution service unavailable')
   const results = limited.map((test, index) => {
