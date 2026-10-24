@@ -6,21 +6,9 @@ A 2-person, role-based coding interview platform with real-time editing, AI hint
 
 [![CI](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml/badge.svg)](https://github.com/ShlokMaharwal/CodeNest/actions/workflows/ci.yml)
 
-<p align="center"><img src="docs/screenshots/interviewer-room.png" alt="CodeNest interviewer room with the shared editor and interview controls" width="900"></p>
-
 <p align="center">
-  <img src="docs/screenshots/candidate-room.png" alt="CodeNest candidate view with the code editor and candidate tools" width="900">
-  <br><sub>Candidate editor</sub>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/ai-review.png" alt="CodeNest AI review showing solution feedback and a hire recommendation" width="900">
-  <br><sub>AI review</sub>
-</p>
-
-<p align="center">
-  <img src="docs/screenshots/replay.png" alt="CodeNest session replay showing a saved code snapshot and timeline controls" width="900">
-  <br><sub>Session replay</sub>
+  <img src="docs/screenshots/landing.png" alt="CodeNest landing page with the create-room form" width="900">
+  <br><sub>Landing page and room creation</sub>
 </p>
 
 <p align="center">
@@ -29,9 +17,21 @@ A 2-person, role-based coding interview platform with real-time editing, AI hint
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/landing.png" alt="CodeNest landing page with the create-room form" width="900">
-  <br><sub>Landing page and room creation</sub>
+  <img src="docs/screenshots/replay.png" alt="CodeNest session replay showing a saved code snapshot and timeline controls" width="900">
+  <br><sub>Session replay</sub>
 </p>
+
+<p align="center">
+  <img src="docs/screenshots/ai-review.png" alt="CodeNest AI review showing solution feedback and a hire recommendation" width="900">
+  <br><sub>AI review</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/candidate-room.png" alt="CodeNest candidate view with the code editor and candidate tools" width="900">
+  <br><sub>Candidate editor</sub>
+</p>
+
+<p align="center"><img src="docs/screenshots/interviewer-room.png" alt="CodeNest interviewer room with the shared editor and interview controls" width="900"></p>
 
 ## Features
 
