@@ -28,8 +28,8 @@ export interface IProblem extends Document {
 
 const TestCaseSchema = new Schema<ITestCase>(
   {
-    input: { type: String, required: true },
-    expectedOutput: { type: String, required: true },
+    input: { type: String, default: '' },
+    expectedOutput: { type: String, default: '' },
     isHidden: { type: Boolean, default: false },
   },
   { _id: false },
