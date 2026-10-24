@@ -1,3 +1,4 @@
+import { consumeRateLimit } from '../../server/rate-limit'
 import { env } from './env'
 import Redis from 'ioredis'
 
@@ -54,9 +55,5 @@ export async function getJSON<T = unknown>(key: string): Promise<T | null> {
 }
 
 export async function incrementWithTTL(key: string, ttlSeconds: number): Promise<number> {
-  const count = await redis.incr(key)
-  if (count === 1) {
-    await redis.expire(key, ttlSeconds)
-  }
-  return count
+  return (await consumeRateLimit(redis, key, Number.MAX_SAFE_INTEGER, ttlSeconds)).count
 }

@@ -1,3 +1,4 @@
+import { executionInput } from '../../server/execution-input'
 import { ExecutionResult, TestCase } from '@/types'
 
 const WANDBOX_URL = 'https://wandbox.org/api/compile.json'
@@ -15,11 +16,18 @@ const WANDBOX_COMPILER: Record<string, string> = {
   rust: 'rust-1.82.0',
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('TIMEOUT')), ms),
-  )
-  return Promise.race([promise, timeout])
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeout: number,
+): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 async function runCode(
@@ -32,16 +40,17 @@ async function runCode(
 
   let response: Response
   try {
-    response = await withTimeout(
-      fetch(WANDBOX_URL, {
+    response = await fetchWithTimeout(
+      WANDBOX_URL,
+      {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, compiler, stdin }),
-      }),
+      },
       TIMEOUT_MS,
     )
   } catch (err: any) {
-    if (err.message === 'TIMEOUT') {
+    if (err.name === 'AbortError') {
       throw new Error('Execution timed out. Try simplifying your code.')
     }
     throw new Error('Could not reach execution server. Check your connection.')
@@ -74,6 +83,8 @@ export async function executeCode(
   testCases: TestCase[] = [],
 ): Promise<ExecutionResult> {
   try {
+    if (!executionInput.safeParse({ code, language, testCases }).success)
+      throw new Error('Invalid execution input or size limit exceeded')
     const hasTestCases =
       testCases.length > 0 && testCases.some((tc) => tc.input || tc.expectedOutput)
 

@@ -1,3 +1,4 @@
+import { limitRequest } from '@/lib/rate-limit'
 import { authOptions } from '@/lib/auth'
 import { buildReviewPrompt, callGemini } from '@/lib/gemini'
 import { SnapshotModel } from '@/lib/models/Snapshot'
@@ -12,6 +13,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const limited = await limitRequest('ai-review:' + session.user.email, 5, 60)
+    if (limited) return limited
     const {
       roomId,
       problemTitle = 'Coding Problem',

@@ -1,3 +1,5 @@
+import { redis } from './redis'
+import { consumeRateLimit } from '../../server/rate-limit'
 import { env } from './env'
 import bcrypt from 'bcryptjs'
 import { NextAuthOptions } from 'next-auth'
@@ -16,8 +18,11 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
+        const normalizedEmail = credentials.email.trim().toLowerCase()
+        if (!(await consumeRateLimit(redis, 'ratelimit:login:' + normalizedEmail, 10, 900)).allowed)
+          return null
         await connectDB()
-        const user = await UserModel.findOne({ email: credentials.email })
+        const user = await UserModel.findOne({ email: normalizedEmail })
         if (!user) return null
 
         const isValid = await bcrypt.compare(credentials.password, user.password)

@@ -1,3 +1,4 @@
+const { consumeRateLimit } = require('./rate-limit')
 const { consumeInvite, revokeInvite } = require('./invites')
 const { getCandidateHints } = require('./hints')
 const { authorizeEvent } = require('./socket-policy')
@@ -83,6 +84,22 @@ function registerSocketHandlers(io, dependencies) {
               return
             }
             if (event !== 'join-room') {
+              if (
+                event === 'code-change' &&
+                (typeof payload.code !== 'string' ||
+                  Buffer.byteLength(payload.code) > 100000 ||
+                  !(
+                    await consumeRateLimit(
+                      redis,
+                      'ratelimit:socket:' + payload.roomId + ':' + user.email,
+                      50,
+                      1,
+                    )
+                  ).allowed)
+              ) {
+                socket.emit('error', { message: 'Code update limit exceeded' })
+                return
+              }
               const state = await getRoomState(payload.roomId)
               if (!authorizeEvent(socket, event, payload, state)) {
                 socket.emit('error', { message: 'Forbidden' })
