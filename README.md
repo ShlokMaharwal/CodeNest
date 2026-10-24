@@ -8,35 +8,30 @@ A 2-person, role-based coding interview platform with real-time editing, AI hint
 
 <p align="center"><img src="docs/screenshots/interviewer-room.png" alt="CodeNest interviewer room with the shared editor and interview controls" width="900"></p>
 
-<table>
-  <tr>
-    <td align="center" width="50%">
-      <img src="docs/screenshots/candidate-room.png" alt="CodeNest candidate view with the code editor and candidate tools" width="440">
-      <br><sub>Candidate editor</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="docs/screenshots/ai-review.png" alt="CodeNest AI review showing solution feedback and a hire recommendation" width="440">
-      <br><sub>AI review</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="docs/screenshots/replay.png" alt="CodeNest session replay showing a saved code snapshot and timeline controls" width="440">
-      <br><sub>Session replay</sub>
-    </td>
-    <td align="center" width="50%">
-      <img src="docs/screenshots/dashboard.png" alt="CodeNest interviewer dashboard listing interview rooms" width="440">
-      <br><sub>Interviewer dashboard</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" width="50%">
-      <img src="docs/screenshots/landing.png" alt="CodeNest landing page with the create-room form" width="440">
-      <br><sub>Landing page and room creation</sub>
-    </td>
-    <td></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/screenshots/candidate-room.png" alt="CodeNest candidate view with the code editor and candidate tools" width="900">
+  <br><sub>Candidate editor</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/ai-review.png" alt="CodeNest AI review showing solution feedback and a hire recommendation" width="900">
+  <br><sub>AI review</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/replay.png" alt="CodeNest session replay showing a saved code snapshot and timeline controls" width="900">
+  <br><sub>Session replay</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="CodeNest interviewer dashboard listing interview rooms" width="900">
+  <br><sub>Interviewer dashboard</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/landing.png" alt="CodeNest landing page with the create-room form" width="900">
+  <br><sub>Landing page and room creation</sub>
+</p>
 
 ## Features
 
